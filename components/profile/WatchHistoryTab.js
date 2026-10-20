@@ -342,115 +342,158 @@ export default function WatchHistoryTab() {
 
             {/* HERO: Last Played Song Card */}
             {lastWatched && (
-                <div style={{
-                    position: 'relative',
-                    padding: '24px',
-                    borderRadius: '18px',
-                    marginBottom: '28px',
-                    background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.14) 0%, rgba(20, 20, 20, 0.8) 100%)',
-                    border: '1px solid rgba(234, 179, 8, 0.3)',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45)',
-                    display: 'grid',
-                    gridTemplateColumns: 'minmax(0, 1fr) auto',
-                    gap: '20px',
-                    alignItems: 'center'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: 0 }}>
-                        <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0, borderRadius: '12px', overflow: 'hidden', border: '2px solid rgba(234, 179, 8, 0.5)' }}>
-                            <img
-                                src={lastWatched.poster || '/placeholder.jpg'}
-                                alt={lastWatched.title}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                            <button
-                                onClick={() => handlePlaySong(lastWatched)}
-                                style={{
-                                    position: 'absolute',
-                                    inset: 0,
-                                    background: 'rgba(0,0,0,0.45)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    border: 'none',
-                                    cursor: 'pointer'
-                                }}
-                                title="Play"
-                            >
-                                <Play size={26} fill="#EAB308" color="#EAB308" />
-                            </button>
-                        </div>
+                <>
+                    <style>{`
+                        .history-hero-card {
+                            position: relative;
+                            padding: 24px;
+                            border-radius: 18px;
+                            margin-bottom: 28px;
+                            background: linear-gradient(135deg, rgba(234, 179, 8, 0.14) 0%, rgba(20, 20, 20, 0.8) 100%);
+                            border: 1px solid rgba(234, 179, 8, 0.3);
+                            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 20px;
+                        }
+                        .history-hero-content {
+                            display: flex;
+                            align-items: center;
+                            gap: 18px;
+                            min-width: 0;
+                            flex: 1;
+                        }
+                        .history-hero-actions {
+                            display: flex;
+                            gap: 10px;
+                            flex-shrink: 0;
+                        }
+                        @media (max-width: 640px) {
+                            .history-hero-card {
+                                flex-direction: column;
+                                align-items: stretch;
+                                padding: 16px;
+                                gap: 16px;
+                            }
+                            .history-hero-content {
+                                align-items: center;
+                                gap: 14px;
+                            }
+                            .history-hero-actions {
+                                width: 100%;
+                                display: flex;
+                                gap: 10px;
+                            }
+                            .history-hero-actions > * {
+                                flex: 1;
+                                justify-content: center;
+                                text-align: center;
+                                padding: 10px 12px !important;
+                                font-size: 0.85rem !important;
+                            }
+                        }
+                    `}</style>
 
-                        <div style={{ minWidth: 0 }}>
-                            <div style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '3px 9px',
-                                borderRadius: '999px',
-                                background: 'rgba(234, 179, 8, 0.15)',
-                                border: '1px solid rgba(234, 179, 8, 0.35)',
-                                color: 'var(--accent-gold-light)',
-                                fontSize: '0.72rem',
-                                fontWeight: 700,
-                                marginBottom: '6px'
-                            }}>
-                                <Clock size={11} />
-                                <span>
-                                    <TranslatedText maithili="अखनहुक सुनल गीत" english="LAST PLAYED VIDEO" />
-                                </span>
-                                <span>•</span>
-                                <span>{formatRelativeTime(lastWatched.played_at, language)}</span>
+                    <div className="history-hero-card">
+                        <div className="history-hero-content">
+                            <div style={{ position: 'relative', width: '74px', height: '74px', flexShrink: 0, borderRadius: '12px', overflow: 'hidden', border: '2px solid rgba(234, 179, 8, 0.5)' }}>
+                                <img
+                                    src={lastWatched.poster || '/placeholder.jpg'}
+                                    alt={lastWatched.title}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                                <button
+                                    onClick={() => handlePlaySong(lastWatched)}
+                                    style={{
+                                        position: 'absolute',
+                                        inset: 0,
+                                        background: 'rgba(0,0,0,0.45)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                    title="Play"
+                                >
+                                    <Play size={24} fill="#EAB308" color="#EAB308" />
+                                </button>
                             </div>
 
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '3px 9px',
+                                    borderRadius: '999px',
+                                    background: 'rgba(234, 179, 8, 0.15)',
+                                    border: '1px solid rgba(234, 179, 8, 0.35)',
+                                    color: 'var(--accent-gold-light)',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 700,
+                                    marginBottom: '6px',
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    <Clock size={11} />
+                                    <span>
+                                        <TranslatedText maithili="अखनहुक सुनल गीत" english="LAST PLAYED VIDEO" />
+                                    </span>
+                                    <span>•</span>
+                                    <span>{formatRelativeTime(lastWatched.played_at, language)}</span>
+                                </div>
+
+                                <Link
+                                    href={`/songs/${lastWatched.slug}`}
+                                    className="font-traditional"
+                                    style={{
+                                        fontSize: 'clamp(1.1rem, 2.5vw, 1.35rem)',
+                                        fontWeight: 700,
+                                        color: '#FAFAFA',
+                                        display: 'block',
+                                        lineHeight: 1.25,
+                                        marginBottom: '4px',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    {lastWatched.title}
+                                </Link>
+
+                                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <span>{lastWatched.singer}</span>
+                                    {lastWatched.category && (
+                                        <>
+                                            <span style={{ opacity: 0.4 }}>•</span>
+                                            <span style={{ color: 'var(--accent-gold)' }}>{lastWatched.category}</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="history-hero-actions">
+                            <button
+                                className="btn-play"
+                                onClick={() => handlePlaySong(lastWatched)}
+                                style={{ padding: '10px 18px', fontSize: '0.88rem', whiteSpace: 'nowrap' }}
+                            >
+                                <Play size={15} fill="#070913" />
+                                <TranslatedText maithili="फेरसँ सुनू" english="Resume Play" />
+                            </button>
                             <Link
                                 href={`/songs/${lastWatched.slug}`}
-                                className="font-traditional"
-                                style={{
-                                    fontSize: 'clamp(1.15rem, 2vw, 1.4rem)',
-                                    fontWeight: 700,
-                                    color: '#FAFAFA',
-                                    display: 'block',
-                                    lineHeight: 1.25,
-                                    marginBottom: '4px',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap'
-                                }}
+                                className="btn-ghost"
+                                style={{ padding: '10px 16px', fontSize: '0.84rem', whiteSpace: 'nowrap' }}
                             >
-                                {lastWatched.title}
+                                <Info size={15} />
+                                <TranslatedText maithili="विवरण" english="Details" />
                             </Link>
-
-                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span>{lastWatched.singer}</span>
-                                {lastWatched.category && (
-                                    <>
-                                        <span style={{ opacity: 0.4 }}>•</span>
-                                        <span style={{ color: 'var(--accent-gold)' }}>{lastWatched.category}</span>
-                                    </>
-                                )}
-                            </div>
                         </div>
                     </div>
-
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button
-                            className="btn-play"
-                            onClick={() => handlePlaySong(lastWatched)}
-                            style={{ padding: '10px 20px', fontSize: '0.88rem' }}
-                        >
-                            <Play size={15} fill="#070913" />
-                            <TranslatedText maithili="फेरसँ सुनू" english="Resume Play" />
-                        </button>
-                        <Link
-                            href={`/songs/${lastWatched.slug}`}
-                            className="btn-ghost"
-                            style={{ padding: '10px 16px', fontSize: '0.84rem' }}
-                        >
-                            <Info size={15} />
-                            <TranslatedText maithili="विवरण" english="Details" />
-                        </Link>
-                    </div>
-                </div>
+                </>
             )}
 
             {/* Analytics Stats Bar */}

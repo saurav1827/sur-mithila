@@ -211,28 +211,32 @@ export default function SongCard({ song }) {
       </div>
 
       {/* Title & Metadata */}
-      <div style={{ marginTop: '10px' }}>
+      <div style={{ marginTop: '8px' }}>
         <Link href={songUrl} style={{ textDecoration: 'none' }}>
-          <h3 className="font-traditional" style={{
-            fontSize: '1.1rem',
+          <h3 className="font-traditional song-card-title" style={{
+            fontSize: '1.02rem',
             fontWeight: 700,
             color: '#F8FAFC',
             lineHeight: 1.3,
             marginBottom: '3px',
             display: '-webkit-box',
-            WebkitLineClamp: 1,
+            WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
+            minHeight: '2.5em',
             transition: 'color 0.15s ease'
           }}>
             {title}
           </h3>
           {romanTitle && (
             <p style={{
-              fontSize: '0.78rem',
+              fontSize: '0.76rem',
               color: 'var(--text-muted)',
-              marginBottom: '6px',
-              textTransform: 'capitalize'
+              marginBottom: '5px',
+              textTransform: 'capitalize',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}>
               {romanTitle}
             </p>
@@ -240,27 +244,32 @@ export default function SongCard({ song }) {
         </Link>
 
         {/* Singer / Artist & Quick Studio CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', minWidth: 0 }}>
           <span style={{
-            fontSize: '0.82rem',
+            fontSize: '0.8rem',
             color: 'var(--text-secondary)',
             fontWeight: 500,
             display: 'flex',
             alignItems: 'center',
-            gap: '4px'
+            gap: '4px',
+            minWidth: 0,
+            flex: 1,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
           }}>
-            {singer}
-            {isVerified && <CheckCircle size={13} color="var(--accent-emerald)" />}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{singer}</span>
+            {isVerified && <CheckCircle size={12} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />}
           </span>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             {!coverId && (
               <Link
                 href={`/studio/${song.slug}`}
                 title="Sing Karaoke in Studio"
                 style={{
                   color: 'var(--neon-saffron)',
-                  padding: '4px',
+                  padding: '3px',
                   borderRadius: '6px',
                   background: 'rgba(255, 140, 0, 0.1)',
                   display: 'flex',
@@ -268,18 +277,18 @@ export default function SongCard({ song }) {
                   justifyContent: 'center'
                 }}
               >
-                <Mic size={14} />
+                <Mic size={13} />
               </Link>
             )}
 
             {hasYoutube && (
-              <span title="Official YouTube Video Available">
-                <YoutubeIcon size={14} color="#FF2E63" />
+              <span title="Official YouTube Video Available" style={{ display: 'flex', alignItems: 'center' }}>
+                <YoutubeIcon size={13} color="#FF2E63" />
               </span>
             )}
             {hasAudio && (
-              <span title="Audio Streaming Available">
-                <Radio size={14} color="#10B981" />
+              <span title="Audio Streaming Available" style={{ display: 'flex', alignItems: 'center' }}>
+                <Radio size={13} color="#10B981" />
               </span>
             )}
           </div>

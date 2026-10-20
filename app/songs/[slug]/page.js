@@ -325,8 +325,10 @@ export default async function SongDetailPage({ params, searchParams }) {
                   key={idx}
                   style={{
                     display: 'flex',
+                    flexWrap: 'wrap',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    gap: '8px',
                     padding: '10px 14px',
                     borderRadius: '8px',
                     background: 'rgba(0, 0, 0, 0.3)',
@@ -334,13 +336,26 @@ export default async function SongDetailPage({ params, searchParams }) {
                     fontSize: '0.82rem'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span className="gold-badge" style={{ fontSize: '0.65rem' }}>{src.type}</span>
-                    <span style={{ color: 'var(--text-secondary)', maxWidth: '480px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: '1 1 240px' }}>
+                    <span className="gold-badge" style={{ fontSize: '0.65rem', flexShrink: 0 }}>{src.type}</span>
+                    <a
+                      href={src.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: 'var(--text-secondary)',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere',
+                        fontSize: '0.8rem',
+                        lineHeight: 1.35,
+                        textDecoration: 'underline',
+                        textDecorationColor: 'rgba(255,255,255,0.2)'
+                      }}
+                    >
                       {src.url}
-                    </span>
+                    </a>
                   </div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                     सत्यापित तिथि: {src.checked_at || '2026-09-26'}
                   </span>
                 </div>

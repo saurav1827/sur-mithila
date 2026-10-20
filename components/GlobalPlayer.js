@@ -110,7 +110,7 @@ export default function GlobalPlayer() {
   const category = song?.category || 'Folk Song';
 
   const formatTime = (seconds) => {
-    if (!seconds || isNaN(seconds) || seconds < 0) return '0:00';
+    if (!seconds || isNaN(seconds) || seconds < 0 || !isFinite(seconds)) return '0:00';
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
@@ -425,34 +425,128 @@ export default function GlobalPlayer() {
       {/* PERSISTENT BOTTOM PLAYER BAR */}
       <aside
         aria-label="Global Music Player"
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '84px',
-          background: 'rgba(8, 10, 16, 0.96)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderTop: '1px solid rgba(255, 140, 0, 0.3)',
-          boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.85)',
-          zIndex: 90,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px'
-        }}
+        className="global-player-bar"
       >
-        <div style={{
-          maxWidth: '1380px',
-          width: '100%',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '24px'
-        }}>
+        <style>{`
+          .global-player-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 84px;
+            background: rgba(8, 10, 16, 0.96);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(255, 140, 0, 0.3);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+          }
+          .player-inner {
+            max-width: 1380px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            min-width: 0;
+          }
+          .player-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            flex: 1 1 240px;
+          }
+          .player-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 1 1 400px;
+            max-width: 580px;
+          }
+          .player-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+          }
+          .mobile-top-progress {
+            display: none;
+          }
+          .mobile-play-only {
+            display: none;
+          }
+
+          @media (max-width: 768px) {
+            .global-player-bar {
+              height: 64px !important;
+              padding: 0 12px !important;
+            }
+            .player-inner {
+              gap: 8px !important;
+            }
+            .player-left {
+              flex: 1 1 auto !important;
+              max-width: calc(100% - 110px) !important;
+            }
+            .player-left img, .player-left > div:first-child {
+              width: 42px !important;
+              height: 42px !important;
+            }
+            .player-center {
+              display: none !important;
+            }
+            .desktop-only-action {
+              display: none !important;
+            }
+            .mobile-top-progress {
+              display: block !important;
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              height: 3px;
+              background: rgba(255, 255, 255, 0.12);
+              cursor: pointer;
+            }
+            .mobile-play-only {
+              display: flex !important;
+              align-items: center;
+              justify-content: center;
+              width: 38px;
+              height: 38px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #FF8C00, #FF2E63);
+              border: none;
+              color: #FFF;
+              cursor: pointer;
+              flex-shrink: 0;
+            }
+          }
+        `}</style>
+
+        {/* Real-time Top Progress Bar for Mobile */}
+        <div
+          className="mobile-top-progress"
+          onClick={handleSeek}
+          title="Seek playback"
+        >
+          <div style={{
+            width: `${progressPercent}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #FF8C00, #FF2E63)',
+            transition: 'width 0.2s linear'
+          }} />
+        </div>
+
+        <div className="player-inner">
           {/* Left: Track Meta & Poster */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '220px', maxWidth: '320px' }}>
+          <div className="player-left">
             <div
               onClick={() => setIsFullscreenLyrics(true)}
               style={{
@@ -476,17 +570,17 @@ export default function GlobalPlayer() {
                 />
               ) : (
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Radio size={24} color="var(--neon-saffron)" />
+                  <Radio size={22} color="var(--neon-saffron)" />
                 </div>
               )}
             </div>
 
-            <div style={{ overflow: 'hidden' }}>
+            <div style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
               <Link
                 href={`/songs/${song?.slug}`}
                 style={{
                   display: 'block',
-                  fontSize: '0.94rem',
+                  fontSize: '0.92rem',
                   fontWeight: 700,
                   color: '#F8FAFC',
                   whiteSpace: 'nowrap',
@@ -498,7 +592,7 @@ export default function GlobalPlayer() {
                 {title}
               </Link>
               <p style={{
-                fontSize: '0.78rem',
+                fontSize: '0.76rem',
                 color: 'var(--text-secondary)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -510,15 +604,8 @@ export default function GlobalPlayer() {
             </div>
           </div>
 
-          {/* Center: Controls & Real-Time Interactive Scrub Bar */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '6px',
-            flex: 1,
-            maxWidth: '580px'
-          }}>
+          {/* Center: Controls & Real-Time Interactive Scrub Bar (Desktop) */}
+          <div className="player-center">
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <button
                 onClick={togglePlay}
@@ -572,7 +659,7 @@ export default function GlobalPlayer() {
               )}
             </div>
 
-            {/* Scrub / Progress Bar with Real-Time Position Navigation */}
+            {/* Scrub / Progress Bar */}
             <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{
                 fontSize: '0.74rem',
@@ -616,7 +703,6 @@ export default function GlobalPlayer() {
                   }} />
                 </div>
 
-                {/* Scrubber Knob */}
                 <div style={{
                   position: 'absolute',
                   left: `calc(${progressPercent}% - ${isHoveringScrub ? '7px' : '5px'})`,
@@ -641,11 +727,39 @@ export default function GlobalPlayer() {
             </div>
           </div>
 
-          {/* Right: Studio CTA, External Links, Close */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Right: Actions */}
+          <div className="player-right">
+            {/* Mobile Play/Pause circular button */}
+            <button
+              onClick={togglePlay}
+              className="mobile-play-only"
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? <Pause size={18} fill="#FFFFFF" /> : <Play size={18} fill="#FFFFFF" style={{ marginLeft: '2px' }} />}
+            </button>
+
+            {/* Quick Lyrics on Mobile */}
+            <button
+              onClick={() => setIsFullscreenLyrics(true)}
+              style={{
+                background: 'rgba(255, 140, 0, 0.12)',
+                color: '#FDE047',
+                border: '1px solid rgba(255, 140, 0, 0.3)',
+                padding: '6px 8px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Lyrics Theater"
+            >
+              <BookOpen size={16} />
+            </button>
+
             <Link
               href={`/studio/${song?.slug}`}
-              className="sing-this-btn"
+              className="sing-this-btn desktop-only-action"
               style={{ display: 'inline-flex' }}
             >
               <Mic size={14} />
@@ -658,6 +772,7 @@ export default function GlobalPlayer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Watch on YouTube"
+                className="desktop-only-action"
                 style={{
                   color: '#FF2E63',
                   background: 'rgba(255, 46, 99, 0.12)',

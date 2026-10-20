@@ -3,8 +3,10 @@ import { getCuratedPlaylists } from '../../lib/data-service';
 import SongCard from '../../components/SongCard';
 import { Sparkles, Disc, Music, Play } from 'lucide-react';
 
-export default function PlaylistsPage() {
-  const playlists = getCuratedPlaylists();
+export const dynamic = 'force-dynamic';
+
+export default async function PlaylistsPage() {
+  const playlists = await getCuratedPlaylists();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>

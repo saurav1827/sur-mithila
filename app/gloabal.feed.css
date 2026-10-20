@@ -1262,4 +1262,86 @@
     color: var(--text-muted);
     font-size: 0.9rem;
     width: 100%;
+}
+
+/* ==========================================================================
+   Mobile & Tablet Responsive Optimizations (Explore, Cards & AI Feed)
+   ========================================================================== */
+@media (max-width: 640px) {
+    .row-item {
+        flex: 0 0 clamp(165px, 50vw, 215px) !important;
+        gap: 4px;
+    }
+
+    .row-scroller {
+        gap: 12px;
+        padding: 4px 0 10px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .row-arrow {
+        display: none !important;
+    }
+
+    .ai-feed-section {
+        padding: 16px 12px;
+        border-radius: 14px;
+        gap: 12px;
+    }
+
+    .ai-feed-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .ai-feed-title {
+        font-size: 1.25rem !important;
+        line-height: 1.3;
+    }
+
+    .ai-feed-subtitle {
+        font-size: 0.8rem !important;
+        line-height: 1.35;
+    }
+
+    .ai-refresh-btn {
+        align-self: flex-start;
+        padding: 6px 12px;
+        font-size: 0.78rem;
+    }
+
+    .ai-mood-chips-scroller {
+        gap: 6px;
+        padding: 2px 0 6px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ai-mood-chip {
+        padding: 5px 11px;
+        font-size: 0.76rem;
+    }
+
+    .ai-reason-bubble {
+        padding: 5px 8px;
+        font-size: 0.7rem;
+        line-height: 1.3;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .feed-mobile-chips {
+        padding: 6px 0;
+        margin-bottom: 8px;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+    .row-item {
+        flex: 0 0 clamp(185px, 34vw, 235px);
+    }
+
+    .ai-feed-section {
+        padding: 20px 16px;
+    }
 }

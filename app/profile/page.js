@@ -241,12 +241,40 @@ function ProfileContent() {
         @keyframes profileFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @media (max-width:860px){
           .profile-layout{flex-direction:column;gap:20px}
-          .profile-nav{width:100%;flex-direction:row;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+          .profile-nav{
+            width:100%;
+            display:flex;
+            flex-direction:row;
+            overflow-x:auto;
+            -webkit-overflow-scrolling:touch;
+            scrollbar-width:none;
+            gap:8px;
+            padding:4px 2px 10px 2px;
+            border-bottom:1px solid rgba(255,255,255,0.08);
+          }
           .profile-nav::-webkit-scrollbar{display:none}
-          .profile-nav>*{flex-shrink:0;white-space:nowrap;width:auto!important}
+          .profile-nav>*{
+            flex:0 0 auto!important;
+            white-space:nowrap!important;
+            width:auto!important;
+            padding:8px 14px!important;
+            border-radius:9999px!important;
+            font-size:0.84rem!important;
+            border:1px solid rgba(255,255,255,0.08)!important;
+            background:rgba(255,255,255,0.03)!important;
+          }
+          .profile-nav>*[aria-current="page"]{
+            background:rgba(234,179,8,0.16)!important;
+            border-color:rgba(234,179,8,0.45)!important;
+            color:#FDE047!important;
+            font-weight:700!important;
+          }
         }
         @media (max-width:680px){.profile-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-        @media (max-width:520px){.profile-head{flex-direction:column;align-items:flex-start!important}}
+        @media (max-width:520px){
+          .profile-head{flex-direction:column;align-items:flex-start!important}
+          .profile-head img{width:70px!important;height:70px!important}
+        }
       `}</style>
 
       {/* Header */}
