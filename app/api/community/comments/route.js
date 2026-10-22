@@ -3,6 +3,8 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from '../../../../lib/mongodb';
 import { recordingFilter } from '../../../../lib/community-service';
+import { moderateComment } from '../../../../lib/ai-agents';
+import { getAuthRole } from '../../../../lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +17,13 @@ export async function GET(req) {
     const { userId: currentUserId } = await auth();
     const db = await getDatabase();
     if (!db) return NextResponse.json({ comments: [] });
+
+    // Fetch post creator ID to inform the client of post ownership
+    const recording = await db.collection('community_recordings').findOne(
+      recordingFilter(recordingId),
+      { projection: { user_id: 1 } }
+    );
+    const recordingAuthorId = recording?.user_id || null;
 
     const rawComments = await db.collection('community_comments')
       .find({ recording_id: recordingId })
@@ -39,9 +48,12 @@ export async function GET(req) {
 
       return {
         id: c._id.toString(),
+        _id: c._id.toString(),
         parentId: c.parent_id || null,
         author,
+        authorName: author,
         avatar,
+        authorAvatar: avatar,
         text: c.text,
         userId: c.user_id || null,
         likes: typeof c.likes === 'number' ? c.likes : likedBy.length,
@@ -51,34 +63,79 @@ export async function GET(req) {
       };
     });
 
-    return NextResponse.json({ comments });
+    return NextResponse.json({ comments, recordingAuthorId });
   } catch (e) {
     console.error('[api/community/comments GET]', e);
-    return NextResponse.json({ comments: [] });
+    return NextResponse.json({ comments: [], recordingAuthorId: null });
   }
 }
 
 export async function POST(req) {
-  const bodyData = await req.json().catch(() => ({}));
-  const { recordingId, anonId, text, parentId } = bodyData;
-  if (typeof recordingId !== 'string' || !text || text.length > 500) {
-    return NextResponse.json({ error: 'bad_request' }, { status: 400 });
-  }
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
 
-  const { userId } = await auth();
-  let authorName = bodyData.author;
-  let authorAvatar = bodyData.avatar;
+    const bodyData = await req.json().catch(() => ({}));
+    const { recordingId, anonId, text, parentId } = bodyData;
+    if (typeof recordingId !== 'string' || !text || typeof text !== 'string' || text.trim().length === 0) {
+      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
 
-  const db = await getDatabase();
-  if (!db) return NextResponse.json({ error: 'db_unavailable' }, { status: 503 });
+    if (text.length > 500) {
+      return NextResponse.json({ success: false, error: 'Comment too long (max 500 characters)' }, { status: 400 });
+    }
 
-  // If signed in, resolve authentic author name and DP
-  if (userId) {
-    const me = await db.collection('users').findOne({ id: userId });
-    if (me?.name) {
-      authorName = me.name;
-      authorAvatar = me.avatar || authorAvatar;
-    } else {
+    const db = await getDatabase();
+    if (!db) return NextResponse.json({ success: false, error: 'Database unavailable' }, { status: 503 });
+
+    // 1. Check if user is globally banned
+    const userDoc = await db.collection('users').findOne({ id: userId });
+    if (userDoc?.is_banned || userDoc?.status === 'banned') {
+      return NextResponse.json({
+        success: false,
+        error: 'Your account is suspended from commenting on community posts.'
+      }, { status: 403 });
+    }
+
+    // 2. Check if user is blocked by the creator of this recording
+    const recording = await db.collection('community_recordings').findOne(recordingFilter(recordingId));
+    if (recording?.user_id && recording.user_id !== userId) {
+      const isBlocked = await db.collection('creator_blocks').findOne({
+        creator_id: recording.user_id,
+        blocked_user_id: userId,
+      });
+      if (isBlocked) {
+        return NextResponse.json({
+          success: false,
+          error: 'You have been blocked from commenting by the author of this post.'
+        }, { status: 403 });
+      }
+    }
+
+    // 3. AI Comment Moderation Pipeline (exact same as main song page)
+    const moderationResult = await moderateComment(text);
+
+    if (!moderationResult.isSafe) {
+      return NextResponse.json({ 
+        success: false, 
+        status: 'rejected',
+        error: 'Comment blocked by AI moderator.',
+        reason: moderationResult.reason 
+      }, { status: 403 });
+    }
+
+    // Resolve authentic user profile (exact same as main song page)
+    let me = userDoc || (await db.collection('users').findOne({ id: userId }));
+    let authorName = (bodyData.authorName && bodyData.authorName !== 'Community Member' && bodyData.authorName !== 'Member')
+      ? bodyData.authorName
+      : ((bodyData.author && bodyData.author !== 'Community Member' && bodyData.author !== 'Member')
+        ? bodyData.author
+        : me?.name);
+    let authorAvatar = bodyData.authorAvatar || bodyData.avatar || me?.avatar;
+
+    if (!authorName || authorName === 'Community Member' || authorName === 'Member') {
       try {
         const clerkUser = await currentUser();
         authorName =
@@ -92,93 +149,147 @@ export async function POST(req) {
         await db.collection('users').updateOne(
           { id: userId },
           {
-            $setOnInsert: {
-              id: userId,
+            $set: {
               name: authorName,
               avatar: authorAvatar,
               email: clerkUser?.emailAddresses?.[0]?.emailAddress || '',
               role: clerkUser?.publicMetadata?.role || 'user',
+              updated_at: new Date().toISOString(),
+            },
+            $setOnInsert: {
+              id: userId,
+              bio: '',
+              location: '',
               joined_at: new Date().toISOString(),
             }
           },
           { upsert: true }
         );
-      } catch { }
-    }
-  }
-
-  const apiKey = process.env.NVIDIA_API_KEY;
-  if (apiKey) {
-    try {
-      const aiRes = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'meta/llama-3.1-8b-instruct',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an AI community moderator for a music site. Reply strictly with JSON format: {"status": "approved"} or {"status": "rejected", "reason": "ai_blocked"}. Reject spam, abuse, hate, sexual content, harassment, or meaningless short testing messages like "hello".'
-            },
-            {
-              role: 'user',
-              content: `Comment to moderate: "${text}"`
-            }
-          ],
-          temperature: 0.1,
-          max_tokens: 30
-        })
-      });
-
-      if (aiRes.ok) {
-        const aiData = await aiRes.json();
-        const content = aiData.choices?.[0]?.message?.content || '{}';
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) {
-          const parsed = JSON.parse(match[0]);
-          if (parsed.status === 'rejected') {
-            return NextResponse.json({ status: 'rejected', reason: parsed.reason || 'ai_blocked' });
-          }
-        }
+      } catch (err) {
+        console.error('[Community Comments] User sync error:', err);
       }
-    } catch (e) {
-      console.error('NVIDIA AI error:', e);
     }
-  }
 
-  const doc = {
-    recording_id: recordingId,
-    parent_id: parentId ? String(parentId) : null,
-    user_id: userId || null,
-    anon_id: anonId || 'anon',
-    author: authorName || 'Member',
-    avatar: authorAvatar || null,
-    text: text.trim(),
-    likes: 0,
-    liked_by: [],
-    created_at: new Date().toISOString()
-  };
-
-  const res = await db.collection('community_comments').insertOne(doc);
-  await db.collection('community_recordings').updateOne(recordingFilter(recordingId), { $inc: { comments_count: 1 } });
-
-  return NextResponse.json({
-    status: 'approved',
-    comment: {
-      id: res.insertedId.toString(),
-      parentId: doc.parent_id,
-      author: doc.author,
-      avatar: doc.avatar,
-      text: doc.text,
-      userId: doc.user_id,
+    const doc = {
+      recording_id: recordingId,
+      parent_id: parentId ? String(parentId) : null,
+      user_id: userId,
+      anon_id: anonId || 'anon',
+      author: authorName || 'Member',
+      authorName: authorName || 'Member',
+      avatar: authorAvatar || null,
+      authorAvatar: authorAvatar || null,
+      text: text.trim(),
       likes: 0,
-      isLiked: false,
-      createdAt: doc.created_at,
+      liked_by: [],
+      created_at: new Date().toISOString()
+    };
+
+    const res = await db.collection('community_comments').insertOne(doc);
+    try {
+      await db.collection('community_recordings').updateOne(recordingFilter(recordingId), { $inc: { comments_count: 1 } });
+    } catch (e) {
+      console.error('[Community Comments] Count increment error:', e);
     }
-  });
+
+    return NextResponse.json({
+      success: true,
+      status: 'approved',
+      id: res.insertedId.toString(),
+      comment: {
+        id: res.insertedId.toString(),
+        _id: res.insertedId.toString(),
+        recordingId,
+        parentId: doc.parent_id,
+        author: doc.author,
+        authorName: doc.authorName,
+        avatar: doc.avatar,
+        authorAvatar: doc.authorAvatar,
+        text: doc.text,
+        userId: doc.user_id,
+        likes: 0,
+        isLiked: false,
+        createdAt: doc.created_at,
+      }
+    });
+  } catch (error) {
+    console.error('[Community Comments POST Error]:', error);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    let commentId = searchParams.get('commentId');
+    if (!commentId) {
+      const body = await req.json().catch(() => ({}));
+      commentId = body?.commentId;
+    }
+
+    if (!commentId || !ObjectId.isValid(commentId)) {
+      return NextResponse.json({ success: false, error: 'Valid commentId is required' }, { status: 400 });
+    }
+
+    const db = await getDatabase();
+    if (!db) return NextResponse.json({ success: false, error: 'Database unavailable' }, { status: 503 });
+
+    const objId = new ObjectId(commentId);
+    const comment = await db.collection('community_comments').findOne({ _id: objId });
+    if (!comment) {
+      return NextResponse.json({ success: false, error: 'Comment not found' }, { status: 404 });
+    }
+
+    // Fetch the recording to verify if current user is the post owner
+    const recording = await db.collection('community_recordings').findOne(recordingFilter(comment.recording_id));
+
+    // Permission check:
+    // 1. Author of the comment can delete their own comment
+    // 2. Creator of the recording can delete any comment on their post
+    // 3. Platform admin can delete any comment
+    const { role } = await getAuthRole();
+    const isCommentAuthor = (comment.user_id === userId);
+    const isPostOwner = (recording && recording.user_id === userId);
+    const isAdmin = (role === 'admin');
+
+    if (!isCommentAuthor && !isPostOwner && !isAdmin) {
+      return NextResponse.json({ success: false, error: 'Permission denied to delete this comment' }, { status: 403 });
+    }
+
+    // Delete comment and all its nested replies
+    const deleteRes = await db.collection('community_comments').deleteMany({
+      $or: [
+        { _id: objId },
+        { parent_id: commentId }
+      ]
+    });
+
+    const deletedCount = deleteRes.deletedCount || 1;
+
+    // Decrement comments count on the recording
+    try {
+      await db.collection('community_recordings').updateOne(
+        recordingFilter(comment.recording_id),
+        { $inc: { comments_count: -deletedCount } }
+      );
+    } catch (e) {
+      console.error('[Community Comments DELETE] Counter decrement error:', e);
+    }
+
+    return NextResponse.json({
+      success: true,
+      deletedCommentId: commentId,
+      deletedCount,
+    });
+  } catch (error) {
+    console.error('[Community Comments DELETE Error]:', error);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+  }
 }
 
 export async function PATCH(req) {

@@ -97,6 +97,10 @@ export default function CommunityClientView({ initialItems = [], initialNextOffs
     fetchPage(0, s, true);
   };
 
+  const handleDeletePost = useCallback((deletedId) => {
+    setItems((prev) => prev.filter((p) => (p.id || p._id) !== deletedId));
+  }, []);
+
   useEffect(() => {
     const el = sentinel.current;
     if (!el || next == null || status === 'error') return;
@@ -197,7 +201,7 @@ export default function CommunityClientView({ initialItems = [], initialNextOffs
 
           {/* Posts Stream */}
           {items.map((post) => (
-            <PostCard key={post.id || post._id} post={post} />
+            <PostCard key={post.id || post._id} post={post} onDeletePost={handleDeletePost} />
           ))}
 
           {/* Loading Skeletons */}

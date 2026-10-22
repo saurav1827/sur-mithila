@@ -23,6 +23,9 @@ export async function POST(req) {
 
     // 1. Resolve authentic user profile from MongoDB or Clerk
     let me = await db.collection('users').findOne({ id: userId });
+    if (me?.is_banned || me?.status === 'banned') {
+      return NextResponse.json({ error: 'Your account is suspended from uploading recordings.' }, { status: 403 });
+    }
     let userName = me?.name;
     let userAvatar = me?.avatar;
 

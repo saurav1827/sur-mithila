@@ -130,8 +130,12 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
     const rect = e.currentTarget.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
 
-    if (Number.isFinite(audio.duration) && audio.duration > 0) {
-      audio.currentTime = ratio * audio.duration;
+    const dur = (Number.isFinite(audio.duration) && audio.duration > 0)
+      ? audio.duration
+      : (Number(initialCover?.duration) || 0);
+
+    if (dur > 0) {
+      audio.currentTime = ratio * dur;
       setCoverProgress(ratio * 100);
       setCoverCurrentTime(formatSecs(audio.currentTime));
     }

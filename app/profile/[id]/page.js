@@ -99,6 +99,24 @@ export default function CreatorProfilePage() {
     }
   };
 
+  const handleDeletePost = (deletedId) => {
+    setProfileData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        recordings: (prev.recordings || []).filter(
+          (rec) => (rec.recording_id || rec._id) !== deletedId
+        ),
+        stats: prev.stats
+          ? {
+              ...prev.stats,
+              recordingsCount: Math.max(0, (prev.stats.recordingsCount || 1) - 1),
+            }
+          : prev.stats,
+      };
+    });
+  };
+
   if (loading) {
     return (
       <div style={{ maxWidth: '860px', margin: '0 auto', minHeight: '80vh', padding: '24px 16px' }}>
@@ -563,12 +581,13 @@ export default function CreatorProfilePage() {
                   originalSinger: rec.original_singer,
                 },
                 audioUrl: rec.audio_url,
+                duration: Number(rec.duration) || 0,
                 likes: rec.likes || 0,
                 commentsCount: rec.comments_count || 0,
                 createdAt: rec.created_at,
               };
 
-              return <PostCard key={rec._id || rec.recording_id} post={post} />;
+              return <PostCard key={rec._id || rec.recording_id} post={post} onDeletePost={handleDeletePost} />;
             })
           )}
         </div>

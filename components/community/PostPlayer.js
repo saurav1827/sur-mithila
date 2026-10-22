@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Play, Pause, Heart } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
@@ -22,13 +22,68 @@ function waveform(seed = 'mithila') {
 
 export default function PostPlayer({ post, burstKey, onDoubleTap }) {
   const audioRef = useRef(null);
+  const knownDur = Number(post?.duration) || 0;
   const [playing, setPlaying] = useState(false);
-  const [t, setT] = useState({ cur: 0, dur: 0 });
+  const [t, setT] = useState({ cur: 0, dur: knownDur });
   const bars = useMemo(() => waveform(post?.id || post?._id || 'mithila'), [post?.id, post?._id]);
   const { setIsPlaying: setGlobalIsPlaying } = usePlayer() || {};
   const ratio = t.dur > 0 ? Math.min(1, Math.max(0, t.cur / t.dur)) : 0;
 
   const audioSrc = post?.audioUrl || post?.audio_url || post?.recording_url;
+
+  // Sync initial duration if provided by post metadata
+  useEffect(() => {
+    if (knownDur > 0) {
+      setT((prev) => (prev.dur > 0 ? prev : { ...prev, dur: knownDur }));
+    }
+  }, [knownDur]);
+
+  // Chromium WebM resolution trick: Chrome reports duration as Infinity for MediaRecorder WebMs.
+  // Probing with a background audio node forces Chromium to decode and calculate duration immediately.
+  useEffect(() => {
+    if (knownDur > 0 || !audioSrc) return;
+    let active = true;
+    const probe = new Audio();
+    probe.preload = 'metadata';
+    probe.src = audioSrc;
+
+    const onMeta = () => {
+      if (!active) return;
+      if (Number.isFinite(probe.duration) && probe.duration > 0) {
+        setT((prev) => ({ ...prev, dur: probe.duration }));
+        cleanup();
+      } else if (probe.duration === Infinity) {
+        const onSeeked = () => {
+          if (!active) return;
+          if (Number.isFinite(probe.duration) && probe.duration > 0) {
+            setT((prev) => ({ ...prev, dur: probe.duration }));
+          }
+          cleanup();
+        };
+        probe.addEventListener('seeked', onSeeked, { once: true });
+        probe.addEventListener('timeupdate', onSeeked, { once: true });
+        try {
+          probe.currentTime = 1e10;
+        } catch (e) {
+          cleanup();
+        }
+      }
+    };
+
+    const cleanup = () => {
+      probe.removeEventListener('loadedmetadata', onMeta);
+      probe.removeEventListener('durationchange', onMeta);
+      probe.src = '';
+    };
+
+    probe.addEventListener('loadedmetadata', onMeta);
+    probe.addEventListener('durationchange', onMeta);
+
+    return () => {
+      active = false;
+      cleanup();
+    };
+  }, [audioSrc, knownDur]);
 
   const toggle = (e) => {
     e?.stopPropagation();
@@ -43,7 +98,10 @@ export default function PostPlayer({ post, burstKey, onDoubleTap }) {
       activeAudio = el;
       el.play()
         .then(() => setPlaying(true))
-        .catch(() => setPlaying(false));
+        .catch((err) => {
+          console.warn('[PostPlayer] Play error:', err);
+          setPlaying(false);
+        });
     } else {
       el.pause();
       setPlaying(false);
@@ -51,27 +109,47 @@ export default function PostPlayer({ post, burstKey, onDoubleTap }) {
   };
 
   const seek = (e) => {
+    e?.stopPropagation();
     const el = audioRef.current;
-    if (!el || !Number.isFinite(el.duration) || el.duration <= 0) return;
+    if (!el) return;
+
+    const bestDur = (Number.isFinite(el.duration) && el.duration > 0)
+      ? el.duration
+      : (t.dur > 0 ? t.dur : knownDur);
+
+    if (bestDur <= 0) return;
+
     const r = e.currentTarget.getBoundingClientRect();
     const clickRatio = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    el.currentTime = clickRatio * el.duration;
-    setT(prev => ({ ...prev, cur: el.currentTime }));
+    const targetTime = clickRatio * bestDur;
+
+    el.currentTime = targetTime;
+    setT((prev) => ({ ...prev, cur: targetTime, dur: bestDur }));
   };
 
-  const handleLoadedMetadata = (e) => {
-    const dur = e?.currentTarget?.duration || audioRef.current?.duration || 0;
-    if (Number.isFinite(dur) && dur > 0) {
-      setT(prev => ({ ...prev, dur }));
+  const handleDurationResolution = (el) => {
+    if (!el) return;
+    const d = el.duration;
+    if (Number.isFinite(d) && d > 0) {
+      setT((prev) => ({ ...prev, dur: d }));
+    } else if (d === Infinity || Number.isNaN(d)) {
+      if (knownDur > 0) {
+        setT((prev) => ({ ...prev, dur: knownDur }));
+      }
     }
   };
 
   const handleTimeUpdate = (e) => {
     const cur = e?.currentTarget?.currentTime || audioRef.current?.currentTime || 0;
-    const dur = e?.currentTarget?.duration || audioRef.current?.duration || 0;
-    setT({
-      cur: Number.isFinite(cur) ? cur : 0,
-      dur: Number.isFinite(dur) ? dur : 0
+    const rawDur = e?.currentTarget?.duration || audioRef.current?.duration;
+    setT((prev) => {
+      const bestDur = (Number.isFinite(rawDur) && rawDur > 0)
+        ? rawDur
+        : (prev.dur > 0 ? prev.dur : knownDur);
+      return {
+        cur: Number.isFinite(cur) ? cur : 0,
+        dur: bestDur,
+      };
     });
   };
 
@@ -222,11 +300,17 @@ export default function PostPlayer({ post, burstKey, onDoubleTap }) {
         <audio
           ref={audioRef}
           src={audioSrc}
-          preload="metadata"
+          preload="auto"
           onPlay={() => setPlaying(true)}
+          onPlaying={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={() => {
+            setPlaying(false);
+            setT((prev) => ({ ...prev, cur: 0 }));
+          }}
+          onLoadedMetadata={(e) => handleDurationResolution(e.currentTarget)}
+          onDurationChange={(e) => handleDurationResolution(e.currentTarget)}
+          onCanPlay={(e) => handleDurationResolution(e.currentTarget)}
           onTimeUpdate={handleTimeUpdate}
         />
       )}

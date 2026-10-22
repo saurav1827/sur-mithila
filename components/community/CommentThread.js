@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   MessageSquare, ThumbsUp, Reply, ChevronDown, ChevronUp,
   Send, ShieldAlert, LogIn, Sparkles, CheckCircle2, ShieldCheck,
-  Clock, AlertCircle, Loader2
+  Clock, AlertCircle, Loader2, Trash2, Flag, MoreVertical, X, ShieldX
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -75,26 +75,21 @@ function UserAvatar({ name, avatar, size = 34 }) {
 
 const EMOJI_REACTIONS = ['❤️', '👏', '🔥', '🎶', '🌸', '✨'];
 
-const REASONS = {
-  abuse: 'Abusive language detected.',
-  hate: 'Hateful content not permitted.',
-  harassment: 'Harassment detected.',
-  sexual: 'Inappropriate content.',
-  spam: 'Spam or repetitive text.',
-  too_long: 'Too long (maximum 500 characters).',
-  empty: 'Comment cannot be empty.',
-  ai_blocked: 'Comment blocked by AI community safety moderator.',
-};
-
-export default function CommentThread({ recordingId, onApproved }) {
+export default function CommentThread({
+  recordingId,
+  recordingAuthorId: propAuthorId,
+  onApproved,
+  onCommentDeleted
+}) {
   const { user, isLoaded, openSignIn } = useAuth();
   const { t } = useLanguage();
 
   const [rawComments, setRawComments] = useState([]);
+  const [recordingAuthorId, setRecordingAuthorId] = useState(propAuthorId || null);
   const [loading, setLoading] = useState(true);
   const [mainText, setMainText] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const [mainStatus, setMainStatus] = useState('idle'); // idle | submitting | error | held
+  const [mainStatus, setMainStatus] = useState('idle'); // idle | submitting | error
   const [mainError, setMainError] = useState('');
 
   // Replying state
@@ -109,7 +104,39 @@ export default function CommentThread({ recordingId, onApproved }) {
   // Sort: 'top' | 'newest'
   const [sortBy, setSortBy] = useState('top');
 
+  // Moderation & Action states
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteComment, setConfirmDeleteComment] = useState(null);
+  const [activeDropdownId, setActiveDropdownId] = useState(null);
+  const [reportModal, setReportModal] = useState({ isOpen: false, comment: null });
+  const [reportReason, setReportReason] = useState('harassment');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [blockModal, setBlockModal] = useState({ isOpen: false, targetUser: null });
+  const [blockSubmitting, setBlockSubmitting] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+
   const mainInputRef = useRef(null);
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 3000);
+  };
+
+  useEffect(() => {
+    if (propAuthorId) setRecordingAuthorId(propAuthorId);
+  }, [propAuthorId]);
+
+  // Click outside to close dropdowns
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (!e.target.closest('.comment-dropdown-wrap')) {
+        setActiveDropdownId(null);
+      }
+    };
+    window.addEventListener('click', handleOutside);
+    return () => window.removeEventListener('click', handleOutside);
+  }, []);
 
   useEffect(() => {
     let live = true;
@@ -121,10 +148,11 @@ export default function CommentThread({ recordingId, onApproved }) {
 
     setLoading(true);
     fetch(`/api/community/comments?recordingId=${encodeURIComponent(recordingId)}`)
-      .then((r) => (r.ok ? r.json() : { comments: [] }))
+      .then((r) => (r.ok ? r.json() : { comments: [], recordingAuthorId: null }))
       .then((d) => {
         if (live) {
           setRawComments(d.comments || []);
+          if (d.recordingAuthorId) setRecordingAuthorId(d.recordingAuthorId);
           setLoading(false);
         }
       })
@@ -206,6 +234,11 @@ export default function CommentThread({ recordingId, onApproved }) {
     const textToPost = (overrideText || mainText).trim();
     if (!textToPost || mainStatus === 'submitting') return;
 
+    if (!user) {
+      openSignIn();
+      return;
+    }
+
     setMainStatus('submitting');
     setMainError('');
 
@@ -217,8 +250,10 @@ export default function CommentThread({ recordingId, onApproved }) {
           recordingId,
           anonId: getAnonId(),
           text: textToPost,
-          author: user?.name || 'Mithila Singer',
-          avatar: user?.avatar || null,
+          authorName: user.name,
+          authorAvatar: user.avatar,
+          author: user.name,
+          avatar: user.avatar,
         }),
       });
 
@@ -230,29 +265,29 @@ export default function CommentThread({ recordingId, onApproved }) {
 
       const data = await res.json();
 
-      if (res.ok && data.status === 'approved') {
+      if (res.ok && (data.success || data.status === 'approved')) {
         setMainStatus('idle');
         setMainText('');
         setIsFocused(false);
         const newComment = data.comment || {
           id: Date.now().toString(),
+          _id: Date.now().toString(),
           parentId: null,
           text: textToPost,
-          userId: user?.id || null,
-          author: user?.name || 'Mithila Singer',
-          avatar: user?.avatar || null,
+          userId: user.id,
+          author: user.name || 'Member',
+          authorName: user.name || 'Member',
+          avatar: user.avatar || null,
+          authorAvatar: user.avatar || null,
           likes: 0,
           isLiked: false,
           createdAt: new Date().toISOString(),
         };
         setRawComments((prev) => [newComment, ...prev]);
         onApproved?.();
-      } else if (data.status === 'held') {
-        setMainStatus('held');
-        setMainText('');
       } else {
         setMainStatus('error');
-        setMainError(REASONS[data.reason] || data.reason || 'Comment not permitted by community guidelines.');
+        setMainError(data.reason || data.error || 'Comment could not be published.');
       }
     } catch {
       setMainStatus('error');
@@ -282,14 +317,16 @@ export default function CommentThread({ recordingId, onApproved }) {
           parentId,
           anonId: getAnonId(),
           text: textToPost,
-          author: user.name || 'Mithila Singer',
-          avatar: user.avatar || null,
+          authorName: user.name,
+          authorAvatar: user.avatar,
+          author: user.name,
+          avatar: user.avatar,
         }),
       });
 
       const data = await res.json();
 
-      if (res.ok && data.status === 'approved') {
+      if (res.ok && (data.success || data.status === 'approved')) {
         setReplyStatusMap((prev) => ({ ...prev, [parentId]: 'idle' }));
         setReplyTextMap((prev) => ({ ...prev, [parentId]: '' }));
         setActiveReplyId(null);
@@ -298,11 +335,14 @@ export default function CommentThread({ recordingId, onApproved }) {
 
         const newReply = data.comment || {
           id: Date.now().toString(),
+          _id: Date.now().toString(),
           parentId,
           text: textToPost,
           userId: user.id,
-          author: user.name,
-          avatar: user.avatar,
+          author: user.name || 'Member',
+          authorName: user.name || 'Member',
+          avatar: user.avatar || null,
+          authorAvatar: user.avatar || null,
           likes: 0,
           isLiked: false,
           createdAt: new Date().toISOString(),
@@ -314,14 +354,14 @@ export default function CommentThread({ recordingId, onApproved }) {
         setReplyStatusMap((prev) => ({ ...prev, [parentId]: 'error' }));
         setReplyErrorMap((prev) => ({
           ...prev,
-          [parentId]: REASONS[data.reason] || data.reason || 'Reply could not be posted.',
+          [parentId]: data.reason || data.error || 'Reply blocked by safety moderator.',
         }));
       }
     } catch {
       setReplyStatusMap((prev) => ({ ...prev, [parentId]: 'error' }));
       setReplyErrorMap((prev) => ({
         ...prev,
-        [parentId]: 'Network error. Please try again.',
+        [parentId]: t('पठाओल नहि जा सकल। फेर प्रयास करू।', 'Network error. Please try again.'),
       }));
     }
   };
@@ -351,6 +391,92 @@ export default function CommentThread({ recordingId, onApproved }) {
     } else {
       setMainText((prev) => prev + (prev ? ' ' : '') + emoji);
       setIsFocused(true);
+    }
+  };
+
+  // Delete a comment (for comment author, post owner, or admin)
+  const handleDeleteComment = async (commentId) => {
+    if (!commentId) return;
+    setDeletingId(commentId);
+    try {
+      const res = await fetch(`/api/community/comments?commentId=${encodeURIComponent(commentId)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRawComments((prev) =>
+          prev.filter((c) => c.id !== commentId && c._id !== commentId && c.parentId !== commentId)
+        );
+        setConfirmDeleteComment(null);
+        showToast(t('टिप्पणी हटाओल गेल', 'Comment deleted successfully'));
+        onCommentDeleted?.();
+      } else {
+        alert(data.error || 'Failed to delete comment');
+      }
+    } catch (err) {
+      console.error('[CommentThread] Delete error:', err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // Block a user from commenting on creator's recordings
+  const handleBlockUser = async () => {
+    if (!blockModal.targetUser?.id) return;
+    setBlockSubmitting(true);
+    try {
+      const res = await fetch('/api/community/block-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockedUserId: blockModal.targetUser.id,
+          action: 'block',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(t('उपयोगकर्ता केँ ब्लॉक कएल गेल', `@${blockModal.targetUser.name} blocked from commenting on your recordings`));
+        setBlockModal({ isOpen: false, targetUser: null });
+      } else {
+        alert(data.error || 'Failed to block user');
+      }
+    } catch (err) {
+      console.error('[CommentThread] Block user error:', err);
+    } finally {
+      setBlockSubmitting(false);
+    }
+  };
+
+  // Report a misbehaving comment or user
+  const handleSubmitReport = async (e) => {
+    e.preventDefault();
+    if (!reportModal.comment || !reportReason) return;
+    setReportSubmitting(true);
+    try {
+      const targetId = reportModal.comment.id || reportModal.comment._id;
+      const res = await fetch('/api/community/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'comment',
+          targetId: String(targetId),
+          reason: reportReason,
+          details: reportDetails,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(t('रिपोर्ट दर्ज कएल गेल। धन्यवाद।', 'Report submitted. Thank you for keeping our community safe.'));
+        setReportModal({ isOpen: false, comment: null });
+        setReportReason('harassment');
+        setReportDetails('');
+      } else {
+        alert(data.error || 'Failed to submit report');
+      }
+    } catch (err) {
+      console.error('[CommentThread] Report error:', err);
+    } finally {
+      setReportSubmitting(false);
     }
   };
 
@@ -519,7 +645,7 @@ export default function CommentThread({ recordingId, onApproved }) {
                   setMainText(e.target.value);
                   if (mainStatus !== 'submitting') setMainStatus('idle');
                 }}
-                placeholder={t('प्रतिक्रिया लिखू… (AI Monitored)', 'Add a comment… (AI Monitored)')}
+                placeholder={t('टिप्पणी जोड़ू... (AI Monitored)', 'Add a comment... (AI Monitored)')}
                 rows={isFocused ? 3 : 1}
                 maxLength={500}
                 style={{
@@ -594,35 +720,22 @@ export default function CommentThread({ recordingId, onApproved }) {
                 </div>
               )}
 
-              {/* AI Status Indicators */}
-              {mainStatus === 'submitting' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#EAB308', marginTop: '6px' }}>
-                  <Loader2 size={13} className="spin" />
-                  <span>{t('AI सुरक्षा जाँचि रहल अछि…', 'AI safety screening in progress…')}</span>
-                </div>
-              )}
-              {mainStatus === 'held' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#F59E0B', marginTop: '6px' }}>
-                  <Clock size={13} />
-                  <span>{t('अहाँक टिप्पणी समीक्षा लेल रोकल गेल अछि।', 'Your comment is queued for moderation review.')}</span>
-                </div>
-              )}
               {mainStatus === 'error' && (
                 <div
                   style={{
-                    marginTop: '8px',
-                    padding: '8px 12px',
+                    marginTop: '10px',
+                    padding: '10px 14px',
                     background: 'rgba(239, 68, 68, 0.1)',
                     border: '1px solid rgba(239, 68, 68, 0.25)',
                     borderRadius: '8px',
                     display: 'flex',
-                    gap: '6px',
+                    gap: '8px',
                     alignItems: 'center',
                     color: 'var(--accent-vermilion)',
-                    fontSize: '0.82rem',
+                    fontSize: '0.85rem',
                   }}
                 >
-                  <ShieldAlert size={14} style={{ flexShrink: 0 }} />
+                  <ShieldAlert size={16} style={{ flexShrink: 0 }} />
                   <span>{mainError}</span>
                 </div>
               )}
@@ -703,8 +816,8 @@ export default function CommentThread({ recordingId, onApproved }) {
                     {comment.text}
                   </p>
 
-                  {/* Action Bar: Like & Reply */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '6px' }}>
+                  {/* Action Bar: Like, Reply, Delete & Moderation */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '6px', flexWrap: 'wrap' }}>
                     {/* Like button */}
                     <button
                       type="button"
@@ -747,6 +860,140 @@ export default function CommentThread({ recordingId, onApproved }) {
                       <Reply size={14} />
                       <span>{t('उत्तर दिअ', 'Reply')}</span>
                     </button>
+
+                    {/* Delete button (for comment author, post creator, or admin) */}
+                    {(isSelf || (user && recordingAuthorId && user.id === recordingAuthorId) || (user?.role === 'admin')) && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteComment(comment)}
+                        title={t('टिप्पणी हटाउ', 'Delete comment')}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          padding: '2px 4px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '0.78rem',
+                          transition: 'color 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                      >
+                        <Trash2 size={13} />
+                        <span>{t('हटाउ', 'Delete')}</span>
+                      </button>
+                    )}
+
+                    {/* More / Moderation options (Block user from creator recordings / Report) */}
+                    {user && (!isSelf || (recordingAuthorId && user.id === recordingAuthorId)) && (
+                      <div className="comment-dropdown-wrap" style={{ position: 'relative' }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdownId(activeDropdownId === comment.id ? null : comment.id);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: activeDropdownId === comment.id ? '#EAB308' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            padding: '2px 4px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                          title="Options"
+                        >
+                          <MoreVertical size={13} />
+                        </button>
+
+                        {activeDropdownId === comment.id && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              zIndex: 50,
+                              minWidth: '180px',
+                              background: '#1F2937',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                              borderRadius: '8px',
+                              padding: '4px',
+                              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
+                            }}
+                          >
+                            {/* Post Creator can block misbehaving commenter from their recordings */}
+                            {(recordingAuthorId && user.id === recordingAuthorId) && !isSelf && comment.userId && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveDropdownId(null);
+                                  setBlockModal({
+                                    isOpen: true,
+                                    targetUser: { id: comment.userId, name: author }
+                                  });
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '7px 10px',
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#F59E0B',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600,
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  borderRadius: '6px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.1)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                              >
+                                <ShieldX size={13} />
+                                <span>{t('उपयोगकर्ता ब्लॉक करू', 'Block from my posts')}</span>
+                              </button>
+                            )}
+
+                            {/* Report comment */}
+                            {!isSelf && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveDropdownId(null);
+                                  setReportModal({ isOpen: true, comment });
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '7px 10px',
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--text-secondary)',
+                                  fontSize: '0.78rem',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  borderRadius: '6px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                              >
+                                <Flag size={13} />
+                                <span>{t('टिप्पणी रिपोर्ट करू', 'Report comment')}</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Inline Reply Composer (YouTube style) */}
@@ -829,8 +1076,18 @@ export default function CommentThread({ recordingId, onApproved }) {
                           </div>
 
                           {replyStatusMap[comment.id] === 'error' && (
-                            <div style={{ marginTop: '6px', color: 'var(--accent-vermilion)', fontSize: '0.78rem' }}>
-                              {replyErrorMap[comment.id]}
+                            <div
+                              style={{
+                                marginTop: '6px',
+                                color: 'var(--accent-vermilion)',
+                                fontSize: '0.8rem',
+                                display: 'flex',
+                                gap: '6px',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <ShieldAlert size={14} style={{ flexShrink: 0 }} />
+                              <span>{replyErrorMap[comment.id]}</span>
                             </div>
                           )}
                         </div>
@@ -911,26 +1168,161 @@ export default function CommentThread({ recordingId, onApproved }) {
                                     {reply.text}
                                   </p>
 
-                                  {/* Like button for nested reply */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleLike(reply.id)}
-                                    style={{
-                                      background: 'none',
-                                      border: 'none',
-                                      color: reply.isLiked ? '#EAB308' : 'var(--text-secondary)',
-                                      cursor: 'pointer',
-                                      padding: '2px 4px',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '4px',
-                                      fontSize: '0.76rem',
-                                      fontWeight: reply.isLiked ? 700 : 500,
-                                    }}
-                                  >
-                                    <ThumbsUp size={12} fill={reply.isLiked ? '#EAB308' : 'none'} />
-                                    <span>{reply.likes || 0}</span>
-                                  </button>
+                                  {/* Action row for nested reply */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '2px', flexWrap: 'wrap' }}>
+                                    {/* Like button for nested reply */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleLike(reply.id)}
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: reply.isLiked ? '#EAB308' : 'var(--text-secondary)',
+                                        cursor: 'pointer',
+                                        padding: '2px 4px',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        fontSize: '0.76rem',
+                                        fontWeight: reply.isLiked ? 700 : 500,
+                                      }}
+                                    >
+                                      <ThumbsUp size={12} fill={reply.isLiked ? '#EAB308' : 'none'} />
+                                      <span>{reply.likes || 0}</span>
+                                    </button>
+
+                                    {/* Delete button for nested reply (author, post creator, or admin) */}
+                                    {(isReplySelf || (user && recordingAuthorId && user.id === recordingAuthorId) || (user?.role === 'admin')) && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setConfirmDeleteComment(reply)}
+                                        title={t('उत्तर हटाउ', 'Delete reply')}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          color: 'var(--text-muted)',
+                                          cursor: 'pointer',
+                                          padding: '2px 4px',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '3px',
+                                          fontSize: '0.74rem',
+                                          transition: 'color 0.15s ease',
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                                      >
+                                        <Trash2 size={11} />
+                                        <span>{t('हटाउ', 'Delete')}</span>
+                                      </button>
+                                    )}
+
+                                    {/* Moderation dropdown for nested reply */}
+                                    {user && (!isReplySelf || (recordingAuthorId && user.id === recordingAuthorId)) && (
+                                      <div className="comment-dropdown-wrap" style={{ position: 'relative' }}>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveDropdownId(activeDropdownId === reply.id ? null : reply.id);
+                                          }}
+                                          style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: activeDropdownId === reply.id ? '#EAB308' : 'var(--text-muted)',
+                                            cursor: 'pointer',
+                                            padding: '2px 4px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                          }}
+                                          title="Options"
+                                        >
+                                          <MoreVertical size={12} />
+                                        </button>
+
+                                        {activeDropdownId === reply.id && (
+                                          <div
+                                            style={{
+                                              position: 'absolute',
+                                              top: '100%',
+                                              left: 0,
+                                              zIndex: 50,
+                                              minWidth: '170px',
+                                              background: '#1F2937',
+                                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                                              borderRadius: '8px',
+                                              padding: '4px',
+                                              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
+                                            }}
+                                          >
+                                            {(recordingAuthorId && user.id === recordingAuthorId) && !isReplySelf && reply.userId && (
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setActiveDropdownId(null);
+                                                  setBlockModal({
+                                                    isOpen: true,
+                                                    targetUser: { id: reply.userId, name: replyAuthor }
+                                                  });
+                                                }}
+                                                style={{
+                                                  width: '100%',
+                                                  padding: '6px 8px',
+                                                  background: 'none',
+                                                  border: 'none',
+                                                  color: '#F59E0B',
+                                                  fontSize: '0.76rem',
+                                                  fontWeight: 600,
+                                                  textAlign: 'left',
+                                                  cursor: 'pointer',
+                                                  borderRadius: '6px',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: '6px',
+                                                }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.1)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                                              >
+                                                <ShieldX size={12} />
+                                                <span>{t('उपयोगकर्ता ब्लॉक करू', 'Block from my posts')}</span>
+                                              </button>
+                                            )}
+
+                                            {!isReplySelf && (
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setActiveDropdownId(null);
+                                                  setReportModal({ isOpen: true, comment: reply });
+                                                }}
+                                                style={{
+                                                  width: '100%',
+                                                  padding: '6px 8px',
+                                                  background: 'none',
+                                                  border: 'none',
+                                                  color: 'var(--text-secondary)',
+                                                  fontSize: '0.76rem',
+                                                  textAlign: 'left',
+                                                  cursor: 'pointer',
+                                                  borderRadius: '6px',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: '6px',
+                                                }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                                              >
+                                                <Flag size={12} />
+                                                <span>{t('उत्तर रिपोर्ट करू', 'Report reply')}</span>
+                                              </button>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -945,6 +1337,328 @@ export default function CommentThread({ recordingId, onApproved }) {
           })
         )}
       </div>
+
+      {/* 5. Delete Comment Confirmation Modal */}
+      {confirmDeleteComment && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setConfirmDeleteComment(null)}
+        >
+          <div
+            style={{
+              background: '#111827',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '380px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#EF4444', marginBottom: '12px' }}>
+              <Trash2 size={20} />
+              <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#FAFAFA' }}>
+                {t('टिप्पणी हटाउ?', 'Delete comment?')}
+              </h4>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', margin: '0 0 20px 0', lineHeight: '1.45' }}>
+              {t(
+                'की अहाँ सचमुच ई टिप्पणी हटाबय चाहैत छी? ई क्रिया पूर्ववत नहि कएल जा सकैत अछि।',
+                'Are you sure you want to delete this comment? This action cannot be undone.'
+              )}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteComment(null)}
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '999px',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                }}
+              >
+                {t('रद्द करू', 'Cancel')}
+              </button>
+              <button
+                type="button"
+                disabled={deletingId === (confirmDeleteComment.id || confirmDeleteComment._id)}
+                onClick={() => handleDeleteComment(confirmDeleteComment.id || confirmDeleteComment._id)}
+                style={{
+                  padding: '7px 18px',
+                  borderRadius: '999px',
+                  background: '#EF4444',
+                  color: '#fff',
+                  border: 'none',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {deletingId ? <Loader2 size={13} className="spin" /> : <Trash2 size={13} />}
+                <span>{t('हटाउ', 'Delete')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Block User Confirmation Modal */}
+      {blockModal.isOpen && blockModal.targetUser && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setBlockModal({ isOpen: false, targetUser: null })}
+        >
+          <div
+            style={{
+              background: '#111827',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#F59E0B', marginBottom: '12px' }}>
+              <ShieldX size={20} />
+              <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#FAFAFA' }}>
+                {t('उपयोगकर्ता केँ ब्लॉक करू?', 'Block user from commenting?')}
+              </h4>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', margin: '0 0 20px 0', lineHeight: '1.45' }}>
+              {t(
+                `की अहाँ @${blockModal.targetUser.name} केँ ब्लॉक करय चाहैत छी? ब्लॉक केलाक बाद ई उपयोगकर्ता अहाँक कोनो भी रिकॉर्डिंग पर टिप्पणी नहि कऽ सकत।`,
+                `Block @${blockModal.targetUser.name} from commenting on any of your recordings? They will no longer be able to post comments on your content.`
+              )}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setBlockModal({ isOpen: false, targetUser: null })}
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '999px',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                }}
+              >
+                {t('रद्द करू', 'Cancel')}
+              </button>
+              <button
+                type="button"
+                disabled={blockSubmitting}
+                onClick={handleBlockUser}
+                style={{
+                  padding: '7px 18px',
+                  borderRadius: '999px',
+                  background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                  color: '#070913',
+                  border: 'none',
+                  fontWeight: 700,
+                  cursor: blockSubmitting ? 'not-allowed' : 'pointer',
+                  fontSize: '0.82rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {blockSubmitting ? <Loader2 size={13} className="spin" /> : <ShieldX size={13} />}
+                <span>{t('ब्लॉक करू', 'Block User')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Report Comment Modal */}
+      {reportModal.isOpen && reportModal.comment && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setReportModal({ isOpen: false, comment: null })}
+        >
+          <div
+            style={{
+              background: '#111827',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '420px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#EAB308' }}>
+                <Flag size={18} />
+                <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#FAFAFA' }}>
+                  {t('टिप्पणी रिपोर्ट करू', 'Report comment')}
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReportModal({ isOpen: false, comment: null })}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitReport}>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  {t('रिपोर्टक कारण चुनू:', 'Select reason for reporting:')}
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {[
+                    { id: 'harassment', label: 'Harassment or hate speech / दुर्व्यवहार' },
+                    { id: 'spam', label: 'Spam or repetitive text / स्पैम' },
+                    { id: 'abusive', label: 'Abusive or vulgar language / अभद्र भाषा' },
+                    { id: 'inappropriate', label: 'Inappropriate content / अनुचित सामग्री' },
+                    { id: 'other', label: 'Other violation / अन्य' },
+                  ].map((opt) => (
+                    <label
+                      key={opt.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '0.82rem',
+                        color: reportReason === opt.id ? '#EAB308' : '#F8FAFC',
+                        padding: '6px 10px',
+                        borderRadius: '8px',
+                        background: reportReason === opt.id ? 'rgba(234, 179, 8, 0.12)' : 'rgba(255,255,255,0.03)',
+                        border: reportReason === opt.id ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid transparent',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="reportReason"
+                        value={opt.id}
+                        checked={reportReason === opt.id}
+                        onChange={() => setReportReason(opt.id)}
+                        style={{ accentColor: '#EAB308' }}
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder={t('वैकल्पिक विवरण लिखू...', 'Optional details to help moderators...')}
+                  rows={2}
+                  maxLength={300}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    fontSize: '0.82rem',
+                    resize: 'none',
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setReportModal({ isOpen: false, comment: null })}
+                  style={{
+                    padding: '7px 16px',
+                    borderRadius: '999px',
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: '0.82rem',
+                  }}
+                >
+                  {t('रद्द करू', 'Cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={!reportReason || reportSubmitting}
+                  style={{
+                    padding: '7px 18px',
+                    borderRadius: '999px',
+                    background: '#EAB308',
+                    color: '#070913',
+                    border: 'none',
+                    fontWeight: 700,
+                    cursor: (!reportReason || reportSubmitting) ? 'not-allowed' : 'pointer',
+                    fontSize: '0.82rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  {reportSubmitting ? <Loader2 size={13} className="spin" /> : <Flag size={13} />}
+                  <span>{t('सबमिट करू', 'Submit Report')}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Alert */}
+      {toastMsg && (
+        <div className="sur-toast" style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 10001 }}>
+          <Sparkles size={16} color="var(--neon-saffron)" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
     </div>
   );
 }

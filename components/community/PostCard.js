@@ -2,10 +2,15 @@
 
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
-import { Heart, MessageCircle, Share2, Flag, Mic, CheckCircle, Sparkles, Music2, Play, ExternalLink } from 'lucide-react';
+import {
+  Heart, MessageCircle, Share2, Flag, Mic, CheckCircle,
+  Sparkles, Music2, Play, ExternalLink, Trash2, Loader2, X
+} from 'lucide-react';
 import PostPlayer from './PostPlayer';
 import CommentThread from './CommentThread';
 import { getAnonId } from '../../lib/tracking';
+import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const LIKED_KEY = 'sur_mithila_liked';
 const rtf = typeof Intl !== 'undefined' ? new Intl.RelativeTimeFormat('en', { numeric: 'auto', style: 'short' }) : null;
@@ -18,7 +23,10 @@ function timeAgo(iso) {
   return 'just now';
 }
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, onDeletePost }) {
+  const { user, openSignIn } = useAuth();
+  const { t } = useLanguage();
+
   const [liked, setLiked] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
@@ -33,6 +41,23 @@ export default function PostCard({ post }) {
   const [burstKey, setBurstKey] = useState(0);
   const [toastMsg, setToastMsg] = useState('');
   const inflight = useRef(false);
+
+  // Moderation state
+  const [isDeleted, setIsDeleted] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('harassment');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reporting, setReporting] = useState(false);
+
+  const isOwner = Boolean(
+    user && (
+      (post.user?.id && user.id === post.user.id) ||
+      (post.user?.name && user.name && post.user.name.trim().toLowerCase() === user.name.trim().toLowerCase())
+    )
+  );
+  const canDeletePost = isOwner || user?.role === 'admin';
 
   const persist = (on) => {
     try {
@@ -88,6 +113,61 @@ export default function PostCard({ post }) {
       } catch {}
     }
   };
+
+  const handleDeletePost = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/community/recordings?recordingId=${encodeURIComponent(post.id)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setToastMsg(t('रिकॉर्डिंग हटाओल गेल', 'Recording deleted successfully'));
+        setDeleteConfirmOpen(false);
+        setIsDeleted(true);
+        onDeletePost?.(post.id);
+      } else {
+        alert(data.error || 'Failed to delete recording');
+      }
+    } catch (err) {
+      console.error('[PostCard] Delete error:', err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleReportPost = async (e) => {
+    e.preventDefault();
+    if (!reportReason) return;
+    setReporting(true);
+    try {
+      const res = await fetch('/api/community/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'post',
+          targetId: String(post.id),
+          reason: reportReason,
+          details: reportDetails,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReportModalOpen(false);
+        setToastMsg(t('रिपोर्ट दर्ज कएल गेल। धन्यवाद।', 'Report submitted. Thank you for keeping our community safe.'));
+        setReportReason('harassment');
+        setReportDetails('');
+      } else {
+        alert(data.error || 'Failed to submit report');
+      }
+    } catch (err) {
+      console.error('[PostCard] Report error:', err);
+    } finally {
+      setReporting(false);
+    }
+  };
+
+  if (isDeleted) return null;
 
   return (
     <article className="feed-post-card">
@@ -212,6 +292,39 @@ export default function PostCard({ post }) {
               <span>मूल गीत (Original)</span>
             </Link>
           )}
+
+          {canDeletePost && (
+            <button
+              type="button"
+              onClick={() => setDeleteConfirmOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 14px',
+                borderRadius: '999px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#EF4444',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title={t('अपन रिकॉर्डिंग हटाउ', 'Delete your recording')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.22)';
+                e.currentTarget.style.borderColor = '#EF4444';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+              }}
+            >
+              <Trash2 size={12} />
+              <span>{t('हटाउ (Delete)', 'Delete')}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -269,20 +382,284 @@ export default function PostCard({ post }) {
           </button>
         </div>
 
-        <button
-          className="action-icon-btn"
-          title="Report Post"
-          aria-label="Report"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          <Flag size={15} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {canDeletePost && (
+            <button
+              type="button"
+              className="action-icon-btn"
+              title={t('रिकॉर्डिंग हटाउ', 'Delete Recording')}
+              aria-label="Delete"
+              onClick={() => setDeleteConfirmOpen(true)}
+              style={{ color: 'var(--text-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+
+          {!isOwner && (
+            <button
+              type="button"
+              className="action-icon-btn"
+              title={t('पोस्ट रिपोर्ट करू', 'Report Post')}
+              aria-label="Report"
+              onClick={() => {
+                if (!user) {
+                  openSignIn();
+                  return;
+                }
+                setReportModalOpen(true);
+              }}
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <Flag size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 5. Threaded Comment Sheet */}
       {open && (
         <div style={{ marginTop: '16px', animation: 'fadeInModal 0.2s ease' }}>
-          <CommentThread recordingId={post.id} onApproved={() => setCount((n) => n + 1)} />
+          <CommentThread
+            recordingId={post.id}
+            recordingAuthorId={post.user?.id}
+            onApproved={() => setCount((n) => n + 1)}
+            onCommentDeleted={() => setCount((n) => Math.max(0, n - 1))}
+          />
+        </div>
+      )}
+
+      {/* 6. Delete Post Confirmation Modal */}
+      {deleteConfirmOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setDeleteConfirmOpen(false)}
+        >
+          <div
+            style={{
+              background: '#111827',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#EF4444', marginBottom: '12px' }}>
+              <Trash2 size={22} />
+              <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#FAFAFA' }}>
+                {t('रिकॉर्डिंग हटाउ?', 'Delete recording post?')}
+              </h4>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: '0 0 20px 0', lineHeight: '1.5' }}>
+              {t(
+                'की अहाँ सचमुच ई कम्युनिटी रिकॉर्डिंग हटाबय चाहैत छी? एकर सभटा टिप्पणी आ लाइक सेहो हटाओल जायत।',
+                'Are you sure you want to delete this community recording? All associated comments and likes will also be removed permanently.'
+              )}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmOpen(false)}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '999px',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.84rem',
+                }}
+              >
+                {t('रद्द करू', 'Cancel')}
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeletePost}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '999px',
+                  background: '#EF4444',
+                  color: '#fff',
+                  border: 'none',
+                  fontWeight: 700,
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  fontSize: '0.84rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {deleting ? <Loader2 size={14} className="spin" /> : <Trash2 size={14} />}
+                <span>{t('हटाउ', 'Delete Post')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Report Post Modal */}
+      {reportModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setReportModalOpen(false)}
+        >
+          <div
+            style={{
+              background: '#111827',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '420px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#EAB308' }}>
+                <Flag size={18} />
+                <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#FAFAFA' }}>
+                  {t('रिकॉर्डिंग रिपोर्ट करू', 'Report recording')}
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReportModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleReportPost}>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  {t('रिपोर्टक कारण चुनू:', 'Select reason for reporting:')}
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {[
+                    { id: 'harassment', label: 'Harassment or hate speech / दुर्व्यवहार' },
+                    { id: 'inappropriate', label: 'Inappropriate or vulgar audio / अनुचित ऑडियो' },
+                    { id: 'spam', label: 'Spam, misleading or scam / स्पैम' },
+                    { id: 'copyright', label: 'Copyright violation / कॉपीराइट' },
+                    { id: 'other', label: 'Other violation / अन्य' },
+                  ].map((opt) => (
+                    <label
+                      key={opt.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '0.82rem',
+                        color: reportReason === opt.id ? '#EAB308' : '#F8FAFC',
+                        padding: '6px 10px',
+                        borderRadius: '8px',
+                        background: reportReason === opt.id ? 'rgba(234, 179, 8, 0.12)' : 'rgba(255,255,255,0.03)',
+                        border: reportReason === opt.id ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid transparent',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="reportReason"
+                        value={opt.id}
+                        checked={reportReason === opt.id}
+                        onChange={() => setReportReason(opt.id)}
+                        style={{ accentColor: '#EAB308' }}
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder={t('अतिरिक्त विवरण लिखू (वैकल्पिक)...', 'Provide additional details (optional)...')}
+                  rows={2}
+                  maxLength={300}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    fontSize: '0.82rem',
+                    resize: 'none',
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setReportModalOpen(false)}
+                  style={{
+                    padding: '7px 16px',
+                    borderRadius: '999px',
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: '0.82rem',
+                  }}
+                >
+                  {t('रद्द करू', 'Cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={!reportReason || reporting}
+                  style={{
+                    padding: '7px 18px',
+                    borderRadius: '999px',
+                    background: '#EAB308',
+                    color: '#070913',
+                    border: 'none',
+                    fontWeight: 700,
+                    cursor: (!reportReason || reporting) ? 'not-allowed' : 'pointer',
+                    fontSize: '0.82rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  {reporting ? <Loader2 size={13} className="spin" /> : <Flag size={13} />}
+                  <span>{t('सबमिट करू', 'Submit Report')}</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

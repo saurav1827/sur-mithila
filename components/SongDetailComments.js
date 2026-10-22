@@ -114,7 +114,10 @@ export default function SongDetailComments({ songId, songTitle, initialCover }) 
               )}
             </span>
           </div>
-          <CommentThread recordingId={initialCover.id} />
+          <CommentThread
+            recordingId={initialCover.id}
+            recordingAuthorId={initialCover.userId || initialCover.user_id || initialCover.user?.id}
+          />
         </div>
       )}
 
