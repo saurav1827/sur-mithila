@@ -1,21 +1,95 @@
 {
   "name": "सुर-मिथिला | Sur-Mithila",
-  "short_name": "Sur-Mithila",
-  "description": "मिथिलाक पावन संगीत धरोहर एवं सांस्कृतिक अर्काइव",
+  "short_name": "सुर-मिथिला",
+  "description": "मिथिलाक पावन संगीत धरोहर, विद्यापति पदावली एवं सांस्कृतिक अर्काइव",
   "start_url": "/",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#070913",
-  "theme_color": "#F59E0B",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "window-controls-overlay"
+  ],
+  "orientation": "portrait",
+  "background_color": "#06080F",
+  "theme_color": "#06080F",
+  "lang": "mai",
+  "dir": "ltr",
+  "categories": [
+    "music",
+    "entertainment",
+    "culture"
+  ],
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/icon.png",
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "गीत संग्रह (Songs)",
+      "short_name": "गीत",
+      "description": "लोकप्रिय मैथिली गीत संग्रह ब्राउज करू",
+      "url": "/songs",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "समुदाय (Community)",
+      "short_name": "समुदाय",
+      "description": "उपयोगकर्ता संगीत रिकॉर्डिंग एवं पोस्ट",
+      "url": "/community",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "लोक साधक (Artists)",
+      "short_name": "साधक",
+      "description": "प्रसिद्ध मैथिली गायक एवं कलाकार",
+      "url": "/artists",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
 }

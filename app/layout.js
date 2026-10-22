@@ -5,12 +5,29 @@ import { AuthProvider } from '../context/AuthContext';
 import { PlayerProvider } from '../context/PlayerContext';
 import Navbar from '../components/Navbar';
 import GlobalPlayer from '../components/GlobalPlayer';
+import PWARegister from '../components/PWARegister';
 import { clerkAppearance } from '../lib/clerkAppearance';
 
 export const metadata = {
   title: 'सुर-मिथिला | Sur-Mithila - The Sacred Maithili Cultural Music Archive',
   description: 'Mithila cultural music streaming and archive platform featuring thousands of verified Maithili folk songs, Vidyapati padavali, Vivah sanskar, Chhath geet, and bilingual lyrics.',
+  applicationName: 'सुर-मिथिला',
   keywords: ['Maithili songs', 'Vidyapati', 'Sharda Sinha', 'Mithila folk', 'Bhagwati Geet', 'Vivah Geet', 'Sur-Mithila'],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'सुर-मिथिला'
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icon.svg', type: 'image/svg+xml' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ]
+  },
   openGraph: {
     title: 'सुर-मिथिला | Sur-Mithila',
     description: 'The Sacred Maithili Cultural Music Archive',
@@ -28,7 +45,10 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#0B0E1A',
+  themeColor: '#06080F',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover'
 };
 
 export default function RootLayout({ children }) {
@@ -38,7 +58,8 @@ export default function RootLayout({ children }) {
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link rel="apple-touch-icon" href="/icon.svg" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+          <meta name="mobile-web-app-capable" content="yes" />
         </head>
         <body>
           <LanguageProvider>
@@ -50,6 +71,7 @@ export default function RootLayout({ children }) {
                     {children}
                   </main>
                   <GlobalPlayer />
+                  <PWARegister />
                 </div>
               </PlayerProvider>
             </AuthProvider>
