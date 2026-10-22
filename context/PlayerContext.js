@@ -236,6 +236,84 @@ export function PlayerProvider({ children }) {
     });
   };
 
+  // Native MediaSession API integration (Spotify-style Lock Screen & Notification Controls)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator) || !currentTrack) {
+      return;
+    }
+
+    const { song, recording } = currentTrack;
+    const title = song?.title?.canonical || song?.title?.devanagari || (typeof song?.title === 'string' ? song.title : 'Maithili Geet');
+    const artist = recording?.artist_name || song?.credits?.singer || 'सुर-मिथिला पारंपरिक';
+    const poster = recording?.poster?.image_url || song?.poster?.image_url || song?.poster || '/icons/icon-512.png';
+
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title,
+        artist: artist,
+        album: 'सुर-मिथिला (Sur-Mithila)',
+        artwork: [
+          { src: poster, sizes: '512x512', type: 'image/jpeg' },
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+        ]
+      });
+
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        setIsPlaying(true);
+        try {
+          const player = activePlayerRef.current;
+          if (player) {
+            if (typeof player.playVideo === 'function') player.playVideo();
+            else if (typeof player.play === 'function') player.play().catch(() => {});
+          }
+        } catch (_) {}
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        setIsPlaying(false);
+        try {
+          const player = activePlayerRef.current;
+          if (player) {
+            if (typeof player.pauseVideo === 'function') player.pauseVideo();
+            else if (typeof player.pause === 'function') player.pause();
+          }
+        } catch (_) {}
+      });
+
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime !== undefined && details.seekTime !== null) {
+          seekTo(details.seekTime);
+        }
+      });
+    } catch (e) {
+      // MediaSession error
+    }
+  }, [currentTrack, isPlaying]);
+
+  // Update MediaSession position state when currentTime or duration updates
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('mediaSession' in navigator) || !currentTrack) {
+      return;
+    }
+    try {
+      if (
+        duration > 0 &&
+        typeof currentTime === 'number' &&
+        !isNaN(currentTime) &&
+        typeof navigator.mediaSession.setPositionState === 'function'
+      ) {
+        navigator.mediaSession.setPositionState({
+          duration: Math.max(duration, 1),
+          playbackRate: 1,
+          position: Math.min(Math.max(0, currentTime), duration)
+        });
+      }
+    } catch (_) {}
+  }, [currentTime, duration, currentTrack]);
+
   return (
     <PlayerContext.Provider
       value={{
