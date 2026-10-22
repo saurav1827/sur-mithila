@@ -69,7 +69,14 @@
         top: calc(var(--header-h, 72px) + 16px);
         max-height: calc(100vh - var(--header-h, 72px) - 32px);
         overflow-y: auto;
-        scrollbar-width: thin
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .feed-nav-card::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
     }
 
     .feed-mobile-chips {

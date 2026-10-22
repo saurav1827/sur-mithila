@@ -167,8 +167,12 @@ export function PlayerProvider({ children }) {
   };
 
   const seekTo = (seconds) => {
-    const target = Math.max(0, Math.min(seconds, duration || seconds));
+    const maxDur = duration || currentTrack?.song?.duration || currentTrack?.recording?.duration || seconds;
+    const target = Math.max(0, Math.min(seconds, maxDur > 0 ? maxDur : seconds));
     setCurrentTime(target);
+    if ((!duration || duration <= 0) && maxDur > 0) {
+      setDuration(maxDur);
+    }
     try {
       const player = activePlayerRef.current;
       if (player) {

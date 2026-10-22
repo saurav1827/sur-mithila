@@ -68,7 +68,10 @@ export default function Recommendations({ currentSongId }) {
         </label>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', margin: '16px 0', paddingBottom: '4px' }}>
+      <div 
+        className="recommendations-chips-scroll"
+        style={{ display: 'flex', gap: '8px', overflowX: 'auto', margin: '16px 0', paddingBottom: '4px' }}
+      >
         {CHIPS.map(([k, l]) => (
           <button 
             key={k} 

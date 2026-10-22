@@ -7,7 +7,7 @@ import { usePlayer } from '../context/PlayerContext';
 import {
   Play, Pause, X, Radio, Volume2, VolumeX,
   Maximize2, Minimize2, ChevronDown, BookOpen,
-  Disc, Mic
+  Disc, Mic, RotateCcw
 } from 'lucide-react';
 import YoutubeIcon from './YoutubeIcon';
 import YouTube from 'react-youtube';
@@ -37,7 +37,10 @@ export default function GlobalPlayer() {
 
   const [isFullscreenLyrics, setIsFullscreenLyrics] = useState(false);
   const [fullscreenTab, setFullscreenTab] = useState('devanagari'); // 'devanagari' | 'hindi' | 'roman'
+  const [mobileViewMode, setMobileViewMode] = useState('split'); // 'split' | 'art' | 'lyrics'
   const [isHoveringScrub, setIsHoveringScrub] = useState(false);
+  const [scrubPercent, setScrubPercent] = useState(null);
+  const isPointerDownRef = useRef(false);
 
   const audioRef = useRef(null);
   const miniDockRef = useRef(null);
@@ -116,15 +119,89 @@ export default function GlobalPlayer() {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const progressPercent = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+  const effectiveDuration = duration > 0 ? duration : (song?.duration || recording?.duration || 0);
+  const progressPercent = scrubPercent !== null
+    ? scrubPercent
+    : (effectiveDuration > 0 ? Math.min(100, (currentTime / effectiveDuration) * 100) : 0);
+
+  const calculateSeek = (e, currentTarget) => {
+    if (!effectiveDuration || effectiveDuration <= 0) return null;
+    const rect = currentTarget.getBoundingClientRect();
+    if (!rect || rect.width <= 0) return null;
+
+    const clientX = e.clientX !== undefined && e.clientX !== null
+      ? e.clientX
+      : (e.touches?.[0]?.clientX ?? e.changedTouches?.[0]?.clientX);
+
+    if (typeof clientX !== 'number' || isNaN(clientX)) return null;
+
+    const clickX = clientX - rect.left;
+    const percent = Math.max(0, Math.min(1, clickX / rect.width));
+    const targetSeconds = percent * effectiveDuration;
+    return { percent: percent * 100, seconds: targetSeconds };
+  };
+
+  const handlePointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (e.cancelable) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+
+    const result = calculateSeek(e, e.currentTarget);
+    if (!result) return;
+
+    isPointerDownRef.current = true;
+    setScrubPercent(result.percent);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
+    seekTo(result.seconds);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isPointerDownRef.current) return;
+    if (e.cancelable) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+
+    const result = calculateSeek(e, e.currentTarget);
+    if (!result) return;
+
+    setScrubPercent(result.percent);
+    seekTo(result.seconds);
+  };
+
+  const handlePointerUp = (e) => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+    if (e.cancelable) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+
+    const result = calculateSeek(e, e.currentTarget);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+
+    if (result) {
+      seekTo(result.seconds);
+    }
+    setTimeout(() => {
+      setScrubPercent(null);
+    }, 120);
+  };
+
+  const handlePointerCancel = (e) => {
+    isPointerDownRef.current = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+    setScrubPercent(null);
+  };
 
   const handleSeek = (e) => {
-    if (!duration || duration <= 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percent = Math.max(0, Math.min(1, clickX / rect.width));
-    const targetSeconds = percent * duration;
-    seekTo(targetSeconds);
+    if (e.stopPropagation) e.stopPropagation();
+    const result = calculateSeek(e, e.currentTarget);
+    if (result) {
+      seekTo(result.seconds);
+    }
   };
 
   const onMiniDockReady = (event) => {
@@ -186,9 +263,11 @@ export default function GlobalPlayer() {
             zIndex: 99,
             background: '#000',
             transition: 'opacity 0.2s ease, transform 0.2s ease',
-            display: !isMiniDocked ? 'block' : 'none',
-            opacity: isPlaying ? 1 : 0.85,
-            pointerEvents: 'auto'
+            display: 'block',
+            opacity: isMiniDocked ? 0 : (isPlaying ? 1 : 0.85),
+            pointerEvents: isMiniDocked ? 'none' : 'auto',
+            transform: isMiniDocked ? 'scale(0.001) translateY(600px)' : 'scale(1) translateY(0)',
+            transformOrigin: 'bottom right',
           }}
         >
           {/* Quick Action Overlay Controls */}
@@ -279,144 +358,202 @@ export default function GlobalPlayer() {
       {/* FULLSCREEN SPOTIFY-STYLE EXPANDED LYRICS & ALBUM ART MODE */}
       {isFullscreenLyrics && (
         <div className="fullscreen-player-modal">
-          {/* Top Bar */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            maxWidth: '1200px',
-            width: '100%',
-            margin: '0 auto',
-            paddingBottom: '16px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
-          }}>
-            <button
-              onClick={() => setIsFullscreenLyrics(false)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: 'var(--text-secondary)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              <ChevronDown size={22} color="var(--neon-saffron)" />
-              <span>Minimize (छोट करू)</span>
-            </button>
+          {/* Subtle Ambient Depth & Dark Overlay */}
+          {posterUrl && (
+            <>
+              <div
+                className="fullscreen-ambient-backdrop"
+                style={{ backgroundImage: `url(${posterUrl})` }}
+              />
+              <div className="fullscreen-ambient-overlay" />
+            </>
+          )}
 
-            <div className="lyrics-tabs-pill">
+          <div className="fullscreen-player-container">
+            {/* Top Navigation Bar */}
+            <div className="fs-top-bar">
               <button
-                onClick={() => setFullscreenTab('devanagari')}
-                className={`lyrics-tab-btn ${fullscreenTab === 'devanagari' ? 'active' : ''}`}
+                onClick={() => setIsFullscreenLyrics(false)}
+                className="fs-minimize-btn"
+                title="Minimize player"
               >
-                मैथिली
+                <ChevronDown size={22} color="var(--neon-saffron)" />
+                <span className="fs-minimize-label">Minimize (छोट करू)</span>
+              </button>
+
+              <div className="fs-tabs-pill">
+                <button
+                  onClick={() => setFullscreenTab('devanagari')}
+                  className={`fs-tab-btn ${fullscreenTab === 'devanagari' ? 'active' : ''}`}
+                >
+                  मैथिली
+                </button>
+                <button
+                  onClick={() => setFullscreenTab('hindi')}
+                  className={`fs-tab-btn ${fullscreenTab === 'hindi' ? 'active' : ''}`}
+                >
+                  हिंदी अनुवाद
+                </button>
+                <button
+                  onClick={() => setFullscreenTab('roman')}
+                  className={`fs-tab-btn ${fullscreenTab === 'roman' ? 'active' : ''}`}
+                >
+                  English
+                </button>
+              </div>
+
+              <Link
+                href={`/studio/${song?.slug}`}
+                onClick={() => setIsFullscreenLyrics(false)}
+                className="fs-studio-btn"
+                title="Open Studio to Sing Karaoke"
+              >
+                <Mic size={15} color="var(--neon-saffron)" />
+                <span className="fs-studio-label">Sing Karaoke</span>
+              </Link>
+            </div>
+
+            {/* Mobile View Switcher (Cover Art vs Lyrics) */}
+            <div className="fs-mobile-mode-switch">
+              <button
+                type="button"
+                className={`fs-mobile-mode-btn ${mobileViewMode !== 'lyrics' ? 'active' : ''}`}
+                onClick={() => setMobileViewMode('art')}
+              >
+                कला (Art)
               </button>
               <button
-                onClick={() => setFullscreenTab('hindi')}
-                className={`lyrics-tab-btn ${fullscreenTab === 'hindi' ? 'active' : ''}`}
+                type="button"
+                className={`fs-mobile-mode-btn ${mobileViewMode === 'lyrics' ? 'active' : ''}`}
+                onClick={() => setMobileViewMode('lyrics')}
               >
-                हिंदी अनुवाद
-              </button>
-              <button
-                onClick={() => setFullscreenTab('roman')}
-                className={`lyrics-tab-btn ${fullscreenTab === 'roman' ? 'active' : ''}`}
-              >
-                English
+                बोल (Lyrics)
               </button>
             </div>
 
-            <Link
-              href={`/studio/${song?.slug}`}
-              onClick={() => setIsFullscreenLyrics(false)}
-              className="pill-btn-studio"
-              style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-            >
-              <Mic size={15} color="var(--neon-saffron)" />
-              <span>Sing Karaoke</span>
-            </Link>
-          </div>
+            {/* Main Content Area */}
+            <div className="fs-content-split">
+              {/* Left Column: Album Art & Title */}
+              <div
+                className="fs-art-column"
+                style={{
+                  display: mobileViewMode === 'lyrics' ? 'none' : 'flex'
+                }}
+              >
+                <div className="fs-disc-wrapper">
+                  {posterUrl ? (
+                    <img src={posterUrl} alt={title} className="fs-disc-img" />
+                  ) : (
+                    <div style={{
+                      width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'radial-gradient(circle, rgba(255, 140, 0, 0.2) 0%, #080A10 100%)'
+                    }}>
+                      <Disc size={80} color="var(--neon-saffron)" />
+                    </div>
+                  )}
+                </div>
 
-          {/* Split View */}
-          <div style={{
-            flex: 1,
-            display: 'grid',
-            gridTemplateColumns: 'minmax(280px, 420px) 1fr',
-            gap: '40px',
-            maxWidth: '1200px',
-            width: '100%',
-            margin: '0 auto',
-            padding: '24px 0',
-            alignItems: 'center',
-            overflow: 'hidden'
-          }}>
-            {/* Left Column: Album Art */}
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: '1/1',
-                borderRadius: '24px',
-                overflow: 'hidden',
-                boxShadow: '0 24px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(255, 140, 0, 0.25)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                margin: '0 auto 24px'
-              }}>
-                {posterUrl ? (
-                  <img src={posterUrl} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <h2 className="fs-song-title font-traditional" style={{ fontSize: '1.75rem', color: '#F8FAFC', margin: '0 0 6px 0', lineHeight: 1.25 }}>
+                  {title}
+                </h2>
+                <p className="fs-song-sub" style={{ fontSize: '0.95rem', color: 'var(--neon-saffron)', fontWeight: 600, margin: 0 }}>
+                  {singer} • {category}
+                </p>
+              </div>
+
+              {/* Right Column: Lyrics Scroller */}
+              <div
+                ref={fullscreenScrollRef}
+                className="fullscreen-lyrics-scroll"
+                style={{
+                  display: mobileViewMode === 'art' ? 'none' : 'flex'
+                }}
+              >
+                {fullLines.length > 0 ? (
+                  fullLines.map((line, idx) => {
+                    const isActive = idx === activeLineIdx;
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          if (duration > 0 && fullLines.length > 0) {
+                            const targetSeconds = (idx / fullLines.length) * duration;
+                            seekTo(targetSeconds);
+                          }
+                        }}
+                        className={`fullscreen-lyric-line ${isActive ? 'active' : ''}`}
+                      >
+                        {line}
+                      </div>
+                    );
+                  })
                 ) : (
-                  <div style={{
-                    width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'radial-gradient(circle, rgba(255, 140, 0, 0.2) 0%, #080A10 100%)'
-                  }}>
-                    <Disc size={80} color="var(--neon-saffron)" />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '120px' }}>
+                    {lyricsLoading ? (
+                      <p className="fullscreen-lyric-line" style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '1.4rem' }}>
+                        Loading lyrics...
+                      </p>
+                    ) : (
+                      <p className="fullscreen-lyric-line" style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '1.4rem' }}>
+                        बोल उपलब्ध नहि अछि<br /><span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.3)' }}>(Lyrics not available yet)</span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
-
-              <h2 className="font-traditional" style={{ fontSize: '1.8rem', color: '#F8FAFC', marginBottom: '6px' }}>
-                {title}
-              </h2>
-              <p style={{ fontSize: '1rem', color: 'var(--neon-saffron)', fontWeight: 600 }}>
-                {singer} • {category}
-              </p>
             </div>
 
-            {/* Right Column: Lyrics Scroller */}
-            <div ref={fullscreenScrollRef} className="fullscreen-lyrics-scroll">
-              {fullLines.length > 0 ? (
-                fullLines.map((line, idx) => {
-                  const isActive = idx === activeLineIdx;
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => {
-                        if (duration > 0 && fullLines.length > 0) {
-                          const targetSeconds = (idx / fullLines.length) * duration;
-                          seekTo(targetSeconds);
-                        }
-                      }}
-                      className={`fullscreen-lyric-line ${isActive ? 'active' : ''}`}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {line}
-                    </div>
-                  );
-                })
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                  {lyricsLoading ? (
-                    <p className="fullscreen-lyric-line" style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '1.8rem' }}>
-                      <span style={{ fontSize: '1.4rem' }}>Loading lyrics...</span>
-                    </p>
-                  ) : (
-                    <p className="fullscreen-lyric-line" style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '1.8rem' }}>
-                      बोल उपलब्ध नहि अछि<br/><span style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.3)' }}>(Lyrics not available yet)</span>
-                    </p>
-                  )}
+            {/* Integrated Bottom Fullscreen Controls */}
+            <div className="fs-bottom-controls">
+              {/* Progress Slider */}
+              <div className="fs-progress-row">
+                <span className="fs-time-label">{formatTime(currentTime)}</span>
+                <div
+                  className="fs-scrub-bar"
+                  onClick={handleSeek}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerCancel}
+                  style={{ touchAction: 'none' }}
+                  title="Seek track"
+                >
+                  <div className="fs-scrub-fill" style={{ width: `${progressPercent}%`, transition: scrubPercent !== null ? 'none' : 'width 0.2s linear' }}>
+                    <div className="fs-scrub-thumb" />
+                  </div>
                 </div>
-              )}
+                <span className="fs-time-label">{formatTime(duration)}</span>
+              </div>
+
+              {/* Playback Buttons */}
+              <div className="fs-buttons-row">
+                <button
+                  type="button"
+                  className="fs-icon-btn"
+                  onClick={() => seekTo(0)}
+                  title="Restart song"
+                >
+                  <RotateCcw size={18} />
+                </button>
+
+                <button
+                  type="button"
+                  className="fs-play-btn"
+                  onClick={togglePlay}
+                  title={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? <Pause size={24} fill="#FFF" /> : <Play size={24} fill="#FFF" style={{ marginLeft: '3px' }} />}
+                </button>
+
+                <button
+                  type="button"
+                  className="fs-icon-btn"
+                  onClick={toggleMute}
+                  title={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -510,9 +647,53 @@ export default function GlobalPlayer() {
               top: 0;
               left: 0;
               right: 0;
-              height: 3px;
-              background: rgba(255, 255, 255, 0.12);
+              height: 32px;
+              transform: translateY(-14px);
+              background: transparent;
               cursor: pointer;
+              z-index: 60;
+              touch-action: none;
+              -webkit-tap-highlight-color: transparent;
+              padding: 0;
+              margin: 0;
+            }
+            .mobile-top-progress-track {
+              position: absolute;
+              top: 14px;
+              left: 0;
+              right: 0;
+              height: 4px;
+              background: rgba(255, 255, 255, 0.16);
+              pointer-events: none;
+              transition: height 0.15s ease, background 0.15s ease;
+            }
+            .mobile-top-progress:active .mobile-top-progress-track,
+            .mobile-top-progress.scrubbing .mobile-top-progress-track {
+              height: 6px;
+              background: rgba(255, 255, 255, 0.32);
+            }
+            .mobile-top-progress-fill {
+              height: 100%;
+              background: linear-gradient(90deg, #FF8C00, #FF2E63);
+              position: relative;
+              box-shadow: 0 0 10px rgba(255, 140, 0, 0.6);
+            }
+            .mobile-top-progress-thumb {
+              position: absolute;
+              right: -5px;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 10px;
+              height: 10px;
+              border-radius: 50%;
+              background: #FFFFFF;
+              box-shadow: 0 0 8px rgba(255, 140, 0, 0.9);
+              opacity: 0;
+              transition: opacity 0.15s ease;
+            }
+            .mobile-top-progress:active .mobile-top-progress-thumb,
+            .mobile-top-progress.scrubbing .mobile-top-progress-thumb {
+              opacity: 1;
             }
             .mobile-play-only {
               display: flex !important;
@@ -530,18 +711,32 @@ export default function GlobalPlayer() {
           }
         `}</style>
 
-        {/* Real-time Top Progress Bar for Mobile */}
+        {/* Real-time Top Progress Bar for Mobile (Touch & Drag scrub enabled) */}
         <div
-          className="mobile-top-progress"
+          className={`mobile-top-progress ${scrubPercent !== null ? 'scrubbing' : ''}`}
           onClick={handleSeek}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+          role="slider"
+          aria-label="Seek track"
+          aria-valuenow={Math.round(currentTime)}
+          aria-valuemin={0}
+          aria-valuemax={Math.round(effectiveDuration)}
           title="Seek playback"
         >
-          <div style={{
-            width: `${progressPercent}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #FF8C00, #FF2E63)',
-            transition: 'width 0.2s linear'
-          }} />
+          <div className="mobile-top-progress-track">
+            <div
+              className="mobile-top-progress-fill"
+              style={{
+                width: `${progressPercent}%`,
+                transition: scrubPercent !== null ? 'none' : 'width 0.2s linear'
+              }}
+            >
+              <div className="mobile-top-progress-thumb" />
+            </div>
+          </div>
         </div>
 
         <div className="player-inner">
@@ -674,15 +869,20 @@ export default function GlobalPlayer() {
 
               <div
                 onClick={handleSeek}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
                 onMouseEnter={() => setIsHoveringScrub(true)}
                 onMouseLeave={() => setIsHoveringScrub(false)}
                 style={{
                   flex: 1,
-                  height: '18px',
+                  height: '24px',
                   display: 'flex',
                   alignItems: 'center',
                   cursor: 'pointer',
-                  position: 'relative'
+                  position: 'relative',
+                  touchAction: 'none'
                 }}
                 title="Click or drag to seek in video"
               >
