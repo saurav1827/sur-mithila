@@ -79,8 +79,8 @@
       ]
     },
     {
-      "name": "लोक साधक (Artists)",
-      "short_name": "साधक",
+      "name": "गायक (Singers)",
+      "short_name": "गायक",
       "description": "प्रसिद्ध मैथिली गायक एवं कलाकार",
       "url": "/artists",
       "icons": [

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   Mic, Sparkles, Flame, Radio, Music, RefreshCw, Trophy,
   Play, CheckCircle, ShieldCheck, Plus, Disc, TrendingUp, Users
@@ -35,8 +36,101 @@ function PostSkeleton() {
 export default function CommunityClientView({ initialItems = [], initialNextOffset = null }) {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const targetRecordingId = searchParams?.get('recordingId') || searchParams?.get('recording') || searchParams?.get('rec') || null;
+  const targetCommentId = searchParams?.get('commentId') || null;
+  const shouldOpenComments = searchParams?.get('openComments') === 'true' || Boolean(targetCommentId);
+
   const [sort, setSort] = useState('latest');
   const [items, setItems] = useState(initialItems);
+
+  // Active targeted card and comment states (updated via URL or in-page notification clicks)
+  const [activeTargetId, setActiveTargetId] = useState(targetRecordingId);
+  const [activeCommentId, setActiveCommentId] = useState(targetCommentId);
+  const [activeOpenComments, setActiveOpenComments] = useState(shouldOpenComments);
+
+  // Sync state if searchParams change via router navigation
+  useEffect(() => {
+    if (targetRecordingId) {
+      setActiveTargetId(targetRecordingId);
+      setActiveCommentId(targetCommentId);
+      setActiveOpenComments(shouldOpenComments);
+    }
+  }, [targetRecordingId, targetCommentId, shouldOpenComments]);
+
+  // Robust scroll & highlight helper
+  const triggerScrollAndHighlight = useCallback((recId) => {
+    if (!recId) return false;
+    const el = document.getElementById(`recording-${recId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.remove('card-target-highlight');
+      void el.offsetWidth; // trigger reflow to restart CSS animation
+      el.classList.add('card-target-highlight');
+      setTimeout(() => el.classList.remove('card-target-highlight'), 3500);
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Handle in-page notification clicks when user is already on the community page
+  useEffect(() => {
+    const handleTargetEvent = (e) => {
+      const { recordingId, commentId, openComments } = e.detail || {};
+      if (!recordingId) return;
+
+      setActiveTargetId(recordingId);
+      if (commentId) setActiveCommentId(commentId);
+      if (openComments) setActiveOpenComments(true);
+
+      const exists = items.some((p) => (p.id || p._id) === recordingId);
+      if (!exists) {
+        fetch(`/api/community/recordings?recordingId=${encodeURIComponent(recordingId)}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data?.success && data?.item) {
+              setItems((prev) => [data.item, ...prev.filter((p) => (p.id || p._id) !== recordingId)]);
+            }
+          })
+          .catch(console.error);
+      }
+
+      // Attempt scroll with graceful retries
+      if (!triggerScrollAndHighlight(recordingId)) {
+        setTimeout(() => triggerScrollAndHighlight(recordingId), 120);
+        setTimeout(() => triggerScrollAndHighlight(recordingId), 350);
+        setTimeout(() => triggerScrollAndHighlight(recordingId), 650);
+      }
+    };
+
+    window.addEventListener('sur_mithila_navigate_target', handleTargetEvent);
+    return () => window.removeEventListener('sur_mithila_navigate_target', handleTargetEvent);
+  }, [items, triggerScrollAndHighlight]);
+
+  // If a targeted recording was linked via notification and not loaded in initial items, fetch it immediately
+  useEffect(() => {
+    if (!activeTargetId) return;
+    const exists = items.some((p) => (p.id || p._id) === activeTargetId);
+    if (!exists) {
+      fetch(`/api/community/recordings?recordingId=${encodeURIComponent(activeTargetId)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.success && data?.item) {
+            setItems((prev) => [data.item, ...prev.filter((p) => (p.id || p._id) !== activeTargetId)]);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [activeTargetId, items]);
+
+  // Smoothly scroll to the targeted cover card when items or activeTargetId update
+  useEffect(() => {
+    if (!activeTargetId) return;
+    const timer = setTimeout(() => {
+      triggerScrollAndHighlight(activeTargetId);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [activeTargetId, items, triggerScrollAndHighlight]);
 
   // Dynamically extract distinct authentic creators from feed items
   const activeCreators = React.useMemo(() => {
@@ -200,9 +294,19 @@ export default function CommunityClientView({ initialItems = [], initialNextOffs
           </div>
 
           {/* Posts Stream */}
-          {items.map((post) => (
-            <PostCard key={post.id || post._id} post={post} onDeletePost={handleDeletePost} />
-          ))}
+          {items.map((post) => {
+            const isThisTarget = (post.id || post._id) === activeTargetId;
+            return (
+              <PostCard
+                key={post.id || post._id}
+                post={post}
+                onDeletePost={handleDeletePost}
+                initialOpenComments={isThisTarget && activeOpenComments}
+                highlightCommentId={isThisTarget ? activeCommentId : null}
+                isTargeted={isThisTarget}
+              />
+            );
+          })}
 
           {/* Loading Skeletons */}
           {status === 'loading' && (

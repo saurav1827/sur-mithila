@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Music, Search, Disc, Shield, Radio, Sparkles, User, Settings, LogOut, LogIn, Clock, Menu, X, Mic, Bookmark, Globe } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const menuItem = {
   display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px',
@@ -201,8 +202,9 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', labelMaithili: 'गीत संग्रह', labelEnglish: 'Explore', icon: Music },
     { href: '/categories', labelMaithili: 'संस्कार एवं विधा', labelEnglish: 'Categories', icon: Disc },
-    { href: '/artists', labelMaithili: 'लोक साधक', labelEnglish: 'Artists', icon: Radio },
+    { href: '/artists', labelMaithili: 'गायक', labelEnglish: 'Artists', icon: Mic },
     { href: '/playlists', labelMaithili: 'प्लेलिस्ट', labelEnglish: 'Playlists', icon: Sparkles },
+    { href: '/community', labelMaithili: 'समुदाय (गाउ)', labelEnglish: 'Community', icon: Radio, isCommunity: true },
     ...(user?.role === 'admin'
       ? [{ href: '/admin', labelMaithili: 'प्रशासन', labelEnglish: 'Admin', icon: Shield, isAdmin: true }]
       : [])
@@ -211,28 +213,7 @@ export default function Navbar() {
   return (
     <header className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
       <style>{`
-        .mobile-nav-toggle {
-          display: none;
-          align-items: center;
-          justify-content: center;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: #FAFAFA;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .mobile-nav-toggle:hover, .mobile-nav-toggle:active {
-          background: rgba(234, 179, 8, 0.18);
-          border-color: rgba(234, 179, 8, 0.4);
-          color: #EAB308;
-        }
         @media (max-width: 959px) {
-          .mobile-nav-toggle {
-            display: flex !important;
-          }
           .glass-nav-header {
             padding: 0 16px !important;
             height: 64px !important;
@@ -380,7 +361,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav style={{ display: 'none', alignItems: 'center', gap: '8px' }} className="desktop-nav">
+        <nav style={{ display: 'none', alignItems: 'center', gap: '8px' }} className="desktop-nav" suppressHydrationWarning>
           {navLinks.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
             const isGold = link.isAdmin;
@@ -388,6 +369,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                suppressHydrationWarning
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 4px', margin: '0 10px',
                   fontSize: '0.9rem', fontWeight: isActive || isGold ? 600 : 400,
@@ -396,115 +378,55 @@ export default function Navbar() {
                   transition: 'all 0.2s ease'
                 }}
               >
-                {link.icon && <link.icon size={15} color={isGold ? '#EAB308' : (isActive ? '#EAB308' : 'currentColor')} />}
+                <span style={{ display: 'inline-flex', alignItems: 'center' }} suppressHydrationWarning>
+                  {link.icon && <link.icon size={15} color={isGold ? '#EAB308' : (isActive ? '#EAB308' : 'currentColor')} />}
+                </span>
                 <span>{t(link.labelMaithili, link.labelEnglish)}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Right side: Account & 3-Lines Mobile Menu Toggle */}
+        {/* Right side: Notification Bell & Account */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <NotificationBell />
           <AccountMenu />
-
-          <button
-            className="mobile-nav-toggle"
-            onClick={() => setMobileMenuOpen((o) => !o)}
-            aria-label={mobileMenuOpen ? 'मेनू बंद करू (Close Menu)' : '३ लाइन मेनू (Open Navigation Tabs)'}
-            aria-expanded={mobileMenuOpen}
-            title={mobileMenuOpen ? 'Close' : 'Menu'}
-          >
-            {mobileMenuOpen ? <X size={22} color="#EAB308" /> : <Menu size={22} />}
-          </button>
         </div>
       </div>
 
-      {/* Secondary Search / Community Bar (desktop/tablet) */}
-      <div style={{
+      {/* Secondary Search / Community Bar */}
+      <div className="navbar-subbar" style={{
         maxWidth: '1380px', margin: '0 auto', padding: '0 24px 10px 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent'
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: 'transparent'
       }}>
         <Link
           href="/community"
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0', fontSize: '0.82rem', fontWeight: 500,
-            color: pathname.startsWith('/community') ? '#FAFAFA' : 'var(--text-secondary)', transition: 'color 0.2s ease'
-          }}
+          className={`nav-community-pill ${pathname.startsWith('/community') ? 'is-active' : ''}`}
+          title="मिथिला चौपाल - अपन स्वर रिकॉर्ड करू आ साझा करू (Maithili Community & Vocal Studio)"
         >
-          <Radio size={14} color={pathname.startsWith('/community') ? '#EAB308' : 'var(--text-muted)'} />
-          <span>{t('समुदाय', 'Community')}</span>
+          <span className="nav-community-live-indicator">
+            <span className="nav-community-pulse" />
+            <span className="nav-community-dot" />
+          </span>
+          <Radio size={14} className="nav-community-icon" />
+          <span className="nav-community-label">{t('समुदाय (गाउ)', 'Community')}</span>
         </Link>
 
-        <Link
-          href="/search"
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 12px', borderRadius: '9999px',
-            background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)',
-            color: 'var(--text-muted)', fontSize: '0.78rem', width: '100%', maxWidth: '240px', transition: 'all 0.2s ease'
-          }}
-        >
-          <Search size={14} color="var(--accent-gold)" />
-          <span>{t('गीत खोजू...', 'Search songs...')}</span>
-        </Link>
+        {!pathname.startsWith('/search') && (
+          <Link
+            href="/search"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '9999px',
+              background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)',
+              color: 'var(--text-muted)', fontSize: '0.8rem', width: '100%', maxWidth: '240px', transition: 'all 0.2s ease',
+              textDecoration: 'none'
+            }}
+          >
+            <Search size={14} color="var(--accent-gold)" />
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('गीत खोजू...', 'Search songs...')}</span>
+          </Link>
+        )}
       </div>
-
-      {/* 3-Lines Menu Dropdown for Mobile Navbar Tabs */}
-      {mobileMenuOpen && (
-        <>
-          <div
-            className="mobile-nav-backdrop"
-            onClick={() => setMobileMenuOpen(false)}
-            aria-hidden="true"
-          />
-
-          <div className="mobile-nav-drawer" role="dialog" aria-label="Mobile Navigation Menu">
-            <div className="mobile-nav-tabs-list">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
-                const Icon = link.icon;
-                const isGold = link.isAdmin;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`mobile-nav-tab-link ${isActive ? 'is-active' : ''} ${isGold ? 'is-admin' : ''}`}
-                  >
-                    <div className="mobile-nav-tab-left">
-                      <div className="mobile-nav-tab-icon">
-                        <Icon size={20} color={isGold || isActive ? '#EAB308' : 'currentColor'} />
-                      </div>
-                      <span className="font-traditional mobile-nav-tab-title">
-                        {t(link.labelMaithili, link.labelEnglish)}
-                      </span>
-                    </div>
-
-                    <span className="mobile-nav-tab-badge">
-                      {link.labelEnglish}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-
-            <div className="mobile-nav-footer">
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                {t('सुर-मिथिला मुख्य नेविगेशन', 'Sur-Mithila Navigation')}
-              </span>
-
-              <button
-                type="button"
-                onClick={toggleLanguage}
-                className="mobile-nav-lang-btn"
-                title="भाषा बदलो (Switch Language)"
-              >
-                <Globe size={13} color="#EAB308" />
-                <span>{language === 'maithili' ? 'English' : 'मैथिली'}</span>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
     </header>
   );
 }

@@ -184,17 +184,6 @@ export default function AIFeedSection() {
                         songs.map((song) => (
                             <div className="row-item ai-song-item" key={song.id}>
                                 <SongCard song={song} />
-                                {song.ai_reason && (
-                                    <div className="ai-reason-bubble" title={song.ai_reason.en || song.ai_reason.mai}>
-                                        <Sparkles size={12} color="var(--accent-gold)" />
-                                        <span className="ai-reason-text">
-                                            <TranslatedText
-                                                maithili={song.ai_reason.mai}
-                                                english={song.ai_reason.en}
-                                            />
-                                        </span>
-                                    </div>
-                                )}
                             </div>
                         ))
                     ) : (

@@ -2,24 +2,32 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Play, Pause, Heart, Radio, CheckCircle, Disc, Mic } from 'lucide-react';
+import { Play, Pause, Heart, Radio, CheckCircle, Disc, Mic, ListPlus } from 'lucide-react';
 import YoutubeIcon from './YoutubeIcon';
+import AddToPlaylistModal from './playlist/AddToPlaylistModal';
 import { usePlayer } from '../context/PlayerContext';
 
 export default function SongCard({ song }) {
   const { playTrack, currentTrack, isPlaying } = usePlayer();
   const [isFavorited, setIsFavorited] = useState(false);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const title = song?.title?.canonical || song?.title?.devanagari || 'Maithili Geet';
   const romanTitle = song?.title?.roman || '';
   const singer = song?.credits?.singer || 'पारंपरिक';
-  const posterUrl = song?.poster?.image_url;
-  const hasYoutube = Boolean(song?.youtube?.url || song?.youtube?.video_id);
+  const ytId = song?.youtube?.video_id || (song?.youtube?.url ? (song.youtube.url.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/)([a-zA-Z0-9_-]{11})/)?.[1]) : null);
+  const posterUrl = song?.poster?.image_url || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
+  const hasYoutube = Boolean(song?.youtube?.url || song?.youtube?.video_id || ytId);
   const hasAudio = Boolean(song?.audio?.jiosaavn_url || song?.audio?.apple_music_url || song?.audio?.spotify_url || song?.audio?.hosted_audio_url);
   const isVerified = song?.verification?.status === 'verified';
 
-  // Extract cover/recording ID if present
+  // Extract cover/recording ID and cover artist data if present
   const coverId = song?.recording_id || song?.cover_id || (typeof song?.id === 'string' && song.id.startsWith('cover-') ? song.id.replace(/^cover-/, '') : null);
+  const isCover = Boolean(coverId || song?.is_cover || (typeof singer === 'string' && singer.includes('(Cover)')));
+  const coverArtistName = song?.cover_artist?.name || (singer ? singer.replace(/\s*\(Cover\)/i, '').trim() : 'समुदाय कलाकार');
+  const coverAvatar = song?.cover_artist?.avatar || song?.user_avatar || null;
+  const originalSinger = song?.original_singer || null;
+
   const songUrl = song?.slug ? (coverId ? `/songs/${song.slug}?cover=${encodeURIComponent(coverId)}` : `/songs/${song.slug}`) : '#';
 
   const isCurrentPlaying = currentTrack?.song?.slug === song?.slug && isPlaying;
@@ -99,7 +107,57 @@ export default function SongCard({ song }) {
           style={{ position: 'absolute', inset: 0, zIndex: 1, textDecoration: 'none' }}
           aria-label={title}
         >
-          {posterUrl ? (
+          {isCover ? (
+            <div className="cover-poster-wrap">
+              {/* 1. Blurred, darkened ambient original poster */}
+              {posterUrl ? (
+                <img
+                  src={posterUrl}
+                  alt={title}
+                  loading="lazy"
+                  className="cover-poster-ambient-img"
+                />
+              ) : (
+                <div className="cover-poster-fallback-gradient" />
+              )}
+
+              {/* 2. Studio Vignette Scrim */}
+              <div className="cover-poster-scrim" />
+
+              {/* 3. Center Studio Spotlight: Avatar with Glowing Mic Ring */}
+              <div className="cover-studio-center">
+                <div className="cover-avatar-halo">
+                  {coverAvatar ? (
+                    <img
+                      src={coverAvatar}
+                      alt={coverArtistName}
+                      className="cover-avatar-img"
+                    />
+                  ) : (
+                    <div className="cover-avatar-initial">
+                      {coverArtistName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="cover-mic-icon-badge" title="Vocal Cover">
+                    <Mic size={10} color="#070913" strokeWidth={2.5} />
+                  </span>
+                </div>
+
+                {/* Cover Artist Name Ribbon + Live Waveform */}
+                <div className="cover-vocal-ribbon">
+                  <span className="cover-vocal-name">
+                    {coverArtistName}
+                  </span>
+                  <div className="cover-live-waveform" aria-hidden="true">
+                    <span className="wave-bar w1" />
+                    <span className="wave-bar w2" />
+                    <span className="wave-bar w3" />
+                    <span className="wave-bar w4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : posterUrl ? (
             <img
               src={posterUrl}
               alt={title}
@@ -162,6 +220,39 @@ export default function SongCard({ song }) {
           )}
         </button>
 
+        {/* Add to Playlist Button */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowPlaylistModal(true);
+          }}
+          aria-label="Add to playlist"
+          title="प्लेलिस्ट में जोड़ू"
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '48px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            zIndex: 5,
+            cursor: 'pointer',
+            border: 'none',
+            transition: 'transform 0.15s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          <ListPlus size={15} color="#EAB308" />
+        </button>
+
         {/* Favorite Heart Button */}
         <button
           onClick={toggleFavorite}
@@ -189,23 +280,33 @@ export default function SongCard({ song }) {
         </button>
 
         {/* Category Badge or Cover Pill on Poster */}
-        {(song.category || coverId) && (
+        {(song.category || isCover) && (
           <span style={{
             position: 'absolute',
-            top: '10px',
-            left: '10px',
-            background: coverId ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.95), rgba(217, 119, 6, 0.95))' : 'rgba(8, 10, 16, 0.8)',
+            top: '8px',
+            left: '8px',
+            background: isCover ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' : 'rgba(8, 10, 16, 0.8)',
             backdropFilter: 'blur(8px)',
-            padding: '3px 9px',
+            padding: '3px 8px',
             borderRadius: '6px',
-            fontSize: '0.7rem',
-            color: coverId ? '#070913' : '#FDE047',
+            fontSize: '0.68rem',
+            color: isCover ? '#070913' : '#FDE047',
             fontWeight: 700,
-            border: coverId ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(255, 140, 0, 0.3)',
+            border: isCover ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 140, 0, 0.3)',
             zIndex: 5,
-            boxShadow: coverId ? '0 2px 8px rgba(234, 179, 8, 0.4)' : 'none'
+            boxShadow: isCover ? '0 2px 10px rgba(245, 158, 11, 0.4)' : 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px'
           }}>
-            {coverId ? '🎙️ कवर' : song.category}
+            {isCover ? (
+              <>
+                <Radio size={11} color="#070913" />
+                <span>कवर प्रस्तुति</span>
+              </>
+            ) : (
+              song.category
+            )}
           </span>
         )}
       </div>
@@ -247,8 +348,8 @@ export default function SongCard({ song }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', minWidth: 0 }}>
           <span style={{
             fontSize: '0.8rem',
-            color: 'var(--text-secondary)',
-            fontWeight: 500,
+            color: isCover ? '#FDE047' : 'var(--text-secondary)',
+            fontWeight: isCover ? 600 : 500,
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
@@ -258,7 +359,10 @@ export default function SongCard({ song }) {
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap'
           }}>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{singer}</span>
+            {isCover && <Radio size={11} color="#10B981" style={{ flexShrink: 0 }} />}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {isCover ? `${coverArtistName} (Cover)` : singer}
+            </span>
             {isVerified && <CheckCircle size={12} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />}
           </span>
 
@@ -293,7 +397,44 @@ export default function SongCard({ song }) {
             )}
           </div>
         </div>
+
+        {/* Original Artist Attribution for Covers */}
+        {isCover && originalSinger && (
+          <p style={{
+            fontSize: '0.72rem',
+            color: 'var(--text-muted)',
+            marginTop: '3px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            मूल स्वर: {originalSinger}
+          </p>
+        )}
+
+        {/* AI Recommendation Reason Banner (Inside Card) */}
+        {song?.ai_reason && (
+          <div
+            className="song-card-ai-badge"
+            title={typeof song.ai_reason === 'string' ? song.ai_reason : (song.ai_reason.en || song.ai_reason.mai)}
+          >
+            <span style={{ color: 'var(--accent-gold, #EAB308)', display: 'inline-flex', flexShrink: 0, marginTop: '1px' }}>✨</span>
+            <span className="song-card-ai-text">
+              {typeof song.ai_reason === 'string' ? song.ai_reason : (song.ai_reason.mai || song.ai_reason.en)}
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* Spotify-Grade Add to Playlist Modal */}
+      {showPlaylistModal && (
+        <AddToPlaylistModal
+          song={song}
+          isOpen={showPlaylistModal}
+          onClose={() => setShowPlaylistModal(false)}
+        />
+      )}
     </div>
   );
 }
+

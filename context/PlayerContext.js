@@ -14,9 +14,16 @@ export function PlayerProvider({ children }) {
   const [isMiniDocked, setIsMiniDocked] = useState(false);
   const [activeScript, setActiveScript] = useState('devanagari'); // 'devanagari' | 'roman'
 
+  // Spotify-Grade Playlist Queue & Controls
+  const [playlistQueue, setPlaylistQueue] = useState([]);
+  const [queueIndex, setQueueIndex] = useState(-1);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
+
   const [lyricsBySlug, setLyricsBySlug] = useState({});
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const lyricsRequested = useRef(new Set()); // avoids duplicate fetches
+  const recordedPlaysRef = useRef(new Set()); // tracks songs played >= 10s in current session
 
   const registerLyrics = useCallback((slug, lyrics) => {
     if (!slug || !lyrics) return;
@@ -44,9 +51,26 @@ export function PlayerProvider({ children }) {
   const activePlayerRef = useRef(null); // Active YouTube player instance or HTML5 audio element
   const playerTypeRef = useRef('youtube'); // 'youtube' | 'audio'
 
-  // Register Service Worker for PWA Offline Caching
+  // Register Service Worker for PWA Offline Caching (Production Only)
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      // In local development, unregister service worker and clear cache to prevent stale chunk hydration mismatches
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const reg of registrations) {
+            reg.unregister();
+          }
+        });
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            for (const name of names) {
+              caches.delete(name);
+            }
+          });
+        }
+        return;
+      }
+
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js').then(
           function(registration) {
@@ -68,21 +92,42 @@ export function PlayerProvider({ children }) {
         try {
           const player = activePlayerRef.current;
           if (player) {
+            let cur = 0;
             if (typeof player.getCurrentTime === 'function') {
-              const cur = await player.getCurrentTime();
-              if (typeof cur === 'number' && !isNaN(cur)) {
-                setCurrentTime(cur);
-              }
+              const val = await player.getCurrentTime();
+              if (typeof val === 'number' && !isNaN(val)) cur = val;
               const dur = typeof player.getDuration === 'function' ? await player.getDuration() : 0;
               if (typeof dur === 'number' && !isNaN(dur) && dur > 0) {
                 setDuration(dur);
               }
             } else if (typeof player.currentTime === 'number') {
-              const cur = player.currentTime || 0;
-              setCurrentTime(cur);
+              cur = player.currentTime || 0;
               const dur = player.duration || 0;
               if (dur > 0) {
                 setDuration(dur);
+              }
+            }
+
+            setCurrentTime(cur);
+
+            // REAL SITE PLAY TRACKING: Industry standard metric (>= 10s continuous playback)
+            const activeSongSlug = currentTrack?.song?.slug;
+            if (activeSongSlug && cur >= 10 && !recordedPlaysRef.current.has(activeSongSlug)) {
+              recordedPlaysRef.current.add(activeSongSlug);
+              const rawSinger = currentTrack?.song?.credits?.singer || '';
+              const cleanArtistSlug = currentTrack?.song?.artistSlug || (
+                rawSinger ? rawSinger.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') : null
+              );
+              const payload = JSON.stringify({ songSlug: activeSongSlug, artistSlug: cleanArtistSlug });
+              if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+                navigator.sendBeacon('/api/track-play', payload);
+              } else {
+                fetch('/api/track-play', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: payload,
+                  keepalive: true
+                }).catch(() => {});
               }
             }
           }
@@ -184,6 +229,67 @@ export function PlayerProvider({ children }) {
       }
     } catch (e) {}
   };
+
+  // Play an entire playlist sequentially or shuffled
+  const playPlaylist = useCallback((songs = [], startIndex = 0, shuffle = false) => {
+    if (!Array.isArray(songs) || songs.length === 0) return;
+    let queue = [...songs];
+    let startSong = queue[startIndex] || queue[0];
+    if (shuffle) {
+      const rest = queue.filter((_, i) => i !== startIndex);
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
+      }
+      queue = [startSong, ...rest];
+      startIndex = 0;
+    }
+    setPlaylistQueue(queue);
+    setQueueIndex(startIndex);
+    setIsShuffle(shuffle);
+    playTrack(startSong);
+  }, []);
+
+  const playNext = useCallback(() => {
+    if (!playlistQueue || playlistQueue.length === 0) return;
+    let nextIdx = queueIndex + 1;
+    if (nextIdx >= playlistQueue.length) {
+      if (isRepeat) {
+        nextIdx = 0;
+      } else {
+        return; // End of playlist queue
+      }
+    }
+    setQueueIndex(nextIdx);
+    playTrack(playlistQueue[nextIdx]);
+  }, [playlistQueue, queueIndex, isRepeat]);
+
+  const playPrevious = useCallback(() => {
+    if (currentTime > 3) {
+      seekTo(0);
+      return;
+    }
+    if (!playlistQueue || playlistQueue.length === 0) return;
+    let prevIdx = queueIndex - 1;
+    if (prevIdx < 0) {
+      prevIdx = isRepeat ? playlistQueue.length - 1 : 0;
+    }
+    setQueueIndex(prevIdx);
+    playTrack(playlistQueue[prevIdx]);
+  }, [currentTime, playlistQueue, queueIndex, isRepeat]);
+
+  const addToQueue = useCallback((song) => {
+    if (!song) return;
+    setPlaylistQueue(prev => [...prev, song]);
+  }, []);
+
+  const toggleShuffle = useCallback(() => {
+    setIsShuffle(prev => !prev);
+  }, []);
+
+  const toggleRepeat = useCallback(() => {
+    setIsRepeat(prev => !prev);
+  }, []);
 
   const togglePlay = () => {
     setIsPlaying(prev => {
@@ -288,10 +394,18 @@ export function PlayerProvider({ children }) {
           seekTo(details.seekTime);
         }
       });
+
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        playNext();
+      });
+
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        playPrevious();
+      });
     } catch (e) {
       // MediaSession error
     }
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack, isPlaying, playNext, playPrevious]);
 
   // Update MediaSession position state when currentTime or duration updates
   useEffect(() => {
@@ -343,7 +457,18 @@ export function PlayerProvider({ children }) {
         activePlayerRef,
         currentLyrics,
         lyricsLoading,
-        registerLyrics
+        registerLyrics,
+        // Spotify-Grade Queue & Playlist
+        playlistQueue,
+        queueIndex,
+        isShuffle,
+        isRepeat,
+        playPlaylist,
+        playNext,
+        playPrevious,
+        addToQueue,
+        toggleShuffle,
+        toggleRepeat
       }}
     >
       {children}

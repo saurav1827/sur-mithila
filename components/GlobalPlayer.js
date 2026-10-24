@@ -7,7 +7,7 @@ import { usePlayer } from '../context/PlayerContext';
 import {
   Play, Pause, X, Radio, Volume2, VolumeX,
   Maximize2, Minimize2, ChevronDown, BookOpen,
-  Disc, Mic, RotateCcw
+  Disc, Mic, RotateCcw, Sparkles
 } from 'lucide-react';
 import YoutubeIcon from './YoutubeIcon';
 import YouTube from 'react-youtube';
@@ -37,6 +37,7 @@ export default function GlobalPlayer() {
 
   const [isFullscreenLyrics, setIsFullscreenLyrics] = useState(false);
   const [fullscreenTab, setFullscreenTab] = useState('devanagari'); // 'devanagari' | 'hindi' | 'roman'
+  const [autoScroll, setAutoScroll] = useState(false); // Default to MANUAL scroll
   const [mobileViewMode, setMobileViewMode] = useState('split'); // 'split' | 'art' | 'lyrics'
   const [isHoveringScrub, setIsHoveringScrub] = useState(false);
   const [scrubPercent, setScrubPercent] = useState(null);
@@ -48,6 +49,11 @@ export default function GlobalPlayer() {
   const fullscreenScrollRef = useRef(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Auto-close fullscreen modal when navigating to a new route
+  useEffect(() => {
+    setIsFullscreenLyrics(false);
+  }, [pathname]);
 
   const { song, recording } = currentTrack || {};
   const isCurrentSongPage = currentTrack ? pathname === `/songs/${currentTrack.song?.slug}` : false;
@@ -92,22 +98,23 @@ export default function GlobalPlayer() {
     }
   }, [volume, isMuted]);
 
-  // Auto-scroll inside fullscreen lyrics mode
+  // Auto-scroll inside fullscreen lyrics mode (only when autoScroll is enabled by user)
   useEffect(() => {
-    if (isFullscreenLyrics && fullscreenScrollRef.current) {
+    if (autoScroll && isFullscreenLyrics && fullscreenScrollRef.current) {
       const activeEl = fullscreenScrollRef.current.querySelector('.fullscreen-lyric-line.active');
       if (activeEl) {
         activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [activeLineIdx, isFullscreenLyrics]);
+  }, [activeLineIdx, isFullscreenLyrics, autoScroll]);
 
   // ALL HOOKS FINISHED
   if (!currentTrack) {
     return null;
   }
 
-  const posterUrl = recording?.poster?.image_url || song?.poster?.image_url;
+  const ytId = recording?.youtube?.video_id || song?.youtube?.video_id;
+  const posterUrl = recording?.poster?.image_url || song?.poster?.image_url || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
   const title = song?.title?.canonical || song?.title?.devanagari || 'Maithili Geet';
   const singer = recording?.artist_name || song?.credits?.singer || 'पारंपरिक';
   const category = song?.category || 'Folk Song';
@@ -250,86 +257,33 @@ export default function GlobalPlayer() {
       {youtubeId && !isCurrentSongPage && (
         <div
           ref={miniDockRef}
+          className="mini-video-dock"
           style={{
-            position: 'fixed',
-            bottom: '96px',
-            right: '24px',
-            width: '320px',
-            height: '180px',
-            borderRadius: '14px',
-            overflow: 'hidden',
-            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.85), 0 0 24px rgba(255, 140, 0, 0.3)',
-            border: '2px solid rgba(255, 140, 0, 0.5)',
-            zIndex: 99,
-            background: '#000',
-            transition: 'opacity 0.2s ease, transform 0.2s ease',
-            display: 'block',
             opacity: isMiniDocked ? 0 : (isPlaying ? 1 : 0.85),
             pointerEvents: isMiniDocked ? 'none' : 'auto',
             transform: isMiniDocked ? 'scale(0.001) translateY(600px)' : 'scale(1) translateY(0)',
-            transformOrigin: 'bottom right',
           }}
         >
           {/* Quick Action Overlay Controls */}
-          <div style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            zIndex: 10,
-            display: 'flex',
-            gap: '6px'
-          }}>
+          <div className="mini-dock-controls">
             <button
               onClick={toggleMiniDockFullscreen}
               title="Full Screen Video"
-              style={{
-                background: 'rgba(0, 0, 0, 0.8)',
-                backdropFilter: 'blur(8px)',
-                color: '#fff',
-                padding: '6px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              className="mini-dock-btn"
             >
               <Maximize2 size={13} />
             </button>
             <button
               onClick={() => router.push(`/songs/${song?.slug}`)}
               title="Go to Song Page"
-              style={{
-                background: 'rgba(0, 0, 0, 0.8)',
-                backdropFilter: 'blur(8px)',
-                color: '#FDE047',
-                padding: '6px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              className="mini-dock-btn is-gold"
             >
               <BookOpen size={13} />
             </button>
             <button
               onClick={() => setIsMiniDocked(true)}
               title="Minimize to Audio Bar"
-              style={{
-                background: 'rgba(0, 0, 0, 0.8)',
-                backdropFilter: 'blur(8px)',
-                color: '#fff',
-                padding: '6px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              className="mini-dock-btn"
             >
               <Minimize2 size={13} />
             </button>
@@ -373,28 +327,33 @@ export default function GlobalPlayer() {
             {/* Top Navigation Bar */}
             <div className="fs-top-bar">
               <button
+                type="button"
                 onClick={() => setIsFullscreenLyrics(false)}
                 className="fs-minimize-btn"
-                title="Minimize player"
+                title="Minimize player (छोट करू)"
+                aria-label="Minimize player"
               >
-                <ChevronDown size={22} color="var(--neon-saffron)" />
-                <span className="fs-minimize-label">Minimize (छोट करू)</span>
+                <ChevronDown size={20} color="#FDE047" />
+                <span className="fs-minimize-label font-traditional">छोट करू (Minimize)</span>
               </button>
 
               <div className="fs-tabs-pill">
                 <button
+                  type="button"
                   onClick={() => setFullscreenTab('devanagari')}
                   className={`fs-tab-btn ${fullscreenTab === 'devanagari' ? 'active' : ''}`}
                 >
                   मैथिली
                 </button>
                 <button
+                  type="button"
                   onClick={() => setFullscreenTab('hindi')}
                   className={`fs-tab-btn ${fullscreenTab === 'hindi' ? 'active' : ''}`}
                 >
-                  हिंदी अनुवाद
+                  हिंदी
                 </button>
                 <button
+                  type="button"
                   onClick={() => setFullscreenTab('roman')}
                   className={`fs-tab-btn ${fullscreenTab === 'roman' ? 'active' : ''}`}
                 >
@@ -402,15 +361,38 @@ export default function GlobalPlayer() {
                 </button>
               </div>
 
-              <Link
-                href={`/studio/${song?.slug}`}
-                onClick={() => setIsFullscreenLyrics(false)}
-                className="fs-studio-btn"
-                title="Open Studio to Sing Karaoke"
+              {/* Auto Scroll Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setAutoScroll(prev => !prev)}
+                className={`fs-autoscroll-toggle-btn ${autoScroll ? 'active' : ''}`}
+                title={autoScroll ? 'Auto-scroll चालू अछि (Click to switch to Manual)' : 'Auto-scroll बंद अछि (Click to switch to Auto)'}
               >
-                <Mic size={15} color="var(--neon-saffron)" />
-                <span className="fs-studio-label">Sing Karaoke</span>
-              </Link>
+                <Sparkles size={13} color={autoScroll ? '#070913' : '#FDE047'} />
+                <span>{autoScroll ? 'स्वतः स्क्रॉल ON' : 'Manual Scroll'}</span>
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Link
+                  href={`/studio/${song?.slug}`}
+                  onClick={() => setIsFullscreenLyrics(false)}
+                  className="fs-studio-btn"
+                  title="Open Studio to Sing Karaoke"
+                >
+                  <Mic size={14} color="var(--neon-saffron)" />
+                  <span className="fs-studio-label">Studio</span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreenLyrics(false)}
+                  className="fs-close-btn"
+                  title="Close player"
+                  aria-label="Close player"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* Mobile View Switcher (Cover Art vs Lyrics) */}
@@ -621,8 +603,10 @@ export default function GlobalPlayer() {
 
           @media (max-width: 768px) {
             .global-player-bar {
-              height: 64px !important;
+              bottom: 56px !important;
+              height: 60px !important;
               padding: 0 12px !important;
+              z-index: 90 !important;
             }
             .player-inner {
               gap: 8px !important;

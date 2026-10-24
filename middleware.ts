@@ -5,6 +5,9 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/songs(.*)',
   '/works(.*)',
+  '/artists(.*)',
+  '/categories(.*)',
+  '/playlists(.*)',
   '/community(.*)',
   '/about(.*)',
   '/sign-in(.*)',
@@ -22,6 +25,10 @@ const isPublicApi = createRouteMatcher([
   '/api/feed(.*)',
   '/api/ai(.*)',
   '/api/history(.*)',
+  '/api/track-play(.*)',
+  '/api/playlists(.*)',
+  '/api/categories(.*)',
+  '/api/notifications(.*)',
 ]);
 
 const isAdminRoute = createRouteMatcher([

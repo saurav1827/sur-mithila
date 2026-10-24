@@ -89,3 +89,57 @@ export async function DELETE(req) {
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const recordingId = searchParams.get('recordingId');
+    if (!recordingId) {
+      return NextResponse.json({ success: false, error: 'recordingId is required' }, { status: 400 });
+    }
+
+    const db = await getDatabase();
+    if (!db) {
+      return NextResponse.json({ success: false, error: 'Database unavailable' }, { status: 503 });
+    }
+
+    const rec = await db.collection('community_recordings').findOne(recordingFilter(recordingId));
+    if (!rec) {
+      return NextResponse.json({ success: false, error: 'Recording not found' }, { status: 404 });
+    }
+
+    const slug = rec.song_slug || rec.song_id;
+    let songDoc = null;
+    if (slug) {
+      songDoc = await db.collection('songs').findOne(
+        { slug },
+        { projection: { slug: 1, title: 1, poster: 1, credits: 1 } }
+      );
+    }
+
+    const item = {
+      id: String(rec.recording_id || rec._id),
+      user: {
+        id: rec.user_id || null,
+        name: rec.user_name || 'Anonymous',
+        avatar: rec.user_avatar || null,
+      },
+      song: {
+        slug,
+        title: songDoc?.title?.canonical || rec.song_title || 'अज्ञात गीत',
+        poster: songDoc?.poster?.image_url || null,
+        originalSinger: songDoc?.credits?.singer || null,
+      },
+      audioUrl: rec.audio_url,
+      duration: Number(rec.duration) || 0,
+      likes: rec.likes || 0,
+      commentsCount: rec.comments_count ?? rec.comments?.length ?? 0,
+      createdAt: rec.created_at ? new Date(rec.created_at).toISOString() : null,
+    };
+
+    return NextResponse.json({ success: true, item });
+  } catch (error) {
+    console.error('[GET Recording Error]:', error);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+  }
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sur-mithila-v2';
+const CACHE_NAME = 'sur-mithila-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -39,6 +39,11 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
+  // Skip local development to avoid stale chunk hydration mismatch
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    return;
+  }
 
   // Skip API routes, auth, YouTube, and cross-origin analytics
   if (

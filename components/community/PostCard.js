@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Heart, MessageCircle, Share2, Flag, Mic, CheckCircle,
@@ -23,7 +23,13 @@ function timeAgo(iso) {
   return 'just now';
 }
 
-export default function PostCard({ post, onDeletePost }) {
+export default function PostCard({
+  post,
+  onDeletePost,
+  initialOpenComments = false,
+  highlightCommentId = null,
+  isTargeted = false
+}) {
   const { user, openSignIn } = useAuth();
   const { t } = useLanguage();
 
@@ -37,10 +43,17 @@ export default function PostCard({ post, onDeletePost }) {
   });
   const [likes, setLikes] = useState(post.likes || 0);
   const [count, setCount] = useState(post.commentsCount || 0);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpenComments);
   const [burstKey, setBurstKey] = useState(0);
   const [toastMsg, setToastMsg] = useState('');
   const inflight = useRef(false);
+
+  // Automatically open comments if instructed by notification route
+  useEffect(() => {
+    if (initialOpenComments) {
+      setOpen(true);
+    }
+  }, [initialOpenComments]);
 
   // Moderation state
   const [isDeleted, setIsDeleted] = useState(false);
@@ -64,7 +77,7 @@ export default function PostCard({ post, onDeletePost }) {
       const set = new Set(JSON.parse(localStorage.getItem(LIKED_KEY) || '[]'));
       on ? set.add(post.id) : set.delete(post.id);
       localStorage.setItem(LIKED_KEY, JSON.stringify([...set]));
-    } catch {}
+    } catch { }
   };
 
   const setLike = async (next) => {
@@ -104,13 +117,13 @@ export default function PostCard({ post, onDeletePost }) {
     };
 
     if (navigator.share) {
-      try { await navigator.share(shareData); } catch {}
+      try { await navigator.share(shareData); } catch { }
     } else {
       try {
         await navigator.clipboard.writeText(url);
         setToastMsg('Link Copied to Clipboard!');
         setTimeout(() => setToastMsg(''), 2200);
-      } catch {}
+      } catch { }
     }
   };
 
@@ -170,7 +183,11 @@ export default function PostCard({ post, onDeletePost }) {
   if (isDeleted) return null;
 
   return (
-    <article className="feed-post-card">
+    <article
+      id={`recording-${post.id}`}
+      className={`feed-post-card ${isTargeted ? 'card-target-highlight' : ''}`}
+      style={{ transition: 'all 0.3s ease' }}
+    >
       {/* 1. Header: Creator Avatar, Name & Action Buttons */}
       <div className="post-user-row" style={{ flexWrap: 'wrap', gap: '12px' }}>
         {(() => {
@@ -425,6 +442,7 @@ export default function PostCard({ post, onDeletePost }) {
           <CommentThread
             recordingId={post.id}
             recordingAuthorId={post.user?.id}
+            highlightCommentId={highlightCommentId}
             onApproved={() => setCount((n) => n + 1)}
             onCommentDeleted={() => setCount((n) => Math.max(0, n - 1))}
           />

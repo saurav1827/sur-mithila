@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { ObjectId } from 'mongodb';
 import { getDatabase } from '../../../lib/mongodb';
 import { moderateComment } from '../../../lib/ai-agents';
+import { createNotification, dispatchMentions } from '../../../lib/notification-service';
 
 export async function POST(request) {
   try {
@@ -99,17 +100,43 @@ export async function POST(request) {
 
     const result = await db.collection('comments').insertOne(comment);
 
-    // If this is a reply, increment the parent comment's repliesCount
+    // If this is a reply, increment the parent comment's repliesCount and notify author
     if (parentId && ObjectId.isValid(parentId)) {
       try {
-        await db.collection('comments').updateOne(
+        const parentDoc = await db.collection('comments').findOneAndUpdate(
           { _id: new ObjectId(parentId) },
-          { $inc: { repliesCount: 1 } }
+          { $inc: { repliesCount: 1 } },
+          { returnDocument: 'after' }
         );
+
+        if (parentDoc?.userId && parentDoc.userId !== userId) {
+          createNotification({
+            recipientId: parentDoc.userId,
+            actorId: userId,
+            actorName,
+            actorAvatar,
+            type: 'comment_reply',
+            resourceId: data.songId,
+            resourceTitle: 'गीतक टिप्पणी',
+            textPreview: data.text,
+            targetUrl: `/songs/${data.songId}`
+          }).catch(console.error);
+        }
       } catch (err) {
-        console.error('Failed to increment parent repliesCount:', err);
+        console.error('Failed to increment parent repliesCount & notify:', err);
       }
     }
+
+    // Dispatch any @mentions found in the comment text
+    dispatchMentions({
+      text: data.text,
+      actorId: userId,
+      actorName,
+      actorAvatar,
+      resourceId: data.songId,
+      resourceTitle: 'गीत चर्चा',
+      targetUrl: `/songs/${data.songId}`
+    }).catch(console.error);
 
     return NextResponse.json({
       success: true,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import CommunityClientView from './CommunityClientView';
 import { getCommunityPage } from '../../lib/community-service';
 
@@ -12,5 +12,9 @@ export default async function CommunityPage() {
   let page = { items: [], nextOffset: null };
   try { page = await getCommunityPage({ offset: 0, sort: 'latest' }); }
   catch (e) { console.error('Failed to fetch community recordings:', e); }
-  return <CommunityClientView initialItems={page.items} initialNextOffset={page.nextOffset} />;
+  return (
+    <Suspense fallback={null}>
+      <CommunityClientView initialItems={page.items} initialNextOffset={page.nextOffset} />
+    </Suspense>
+  );
 }

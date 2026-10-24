@@ -79,7 +79,8 @@ export default function CommentThread({
   recordingId,
   recordingAuthorId: propAuthorId,
   onApproved,
-  onCommentDeleted
+  onCommentDeleted,
+  highlightCommentId
 }) {
   const { user, isLoaded, openSignIn } = useAuth();
   const { t } = useLanguage();
@@ -192,6 +193,30 @@ export default function CommentThread({
 
     return { topLevelComments: top, repliesMap: repMap, totalCount: rawComments.length };
   }, [rawComments, sortBy]);
+
+  // Auto-expand reply thread and scroll to targeted comment if requested
+  useEffect(() => {
+    if (!highlightCommentId || loading) return;
+
+    // If targeted comment is a reply, auto-expand its parent's replies
+    for (const [parentId, replies] of Object.entries(repliesMap)) {
+      if (replies.some((r) => r.id === highlightCommentId || r._id === highlightCommentId)) {
+        setExpandedReplies((prev) => ({ ...prev, [parentId]: true }));
+        break;
+      }
+    }
+
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`comment-${highlightCommentId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('comment-target-highlight');
+        setTimeout(() => el.classList.remove('comment-target-highlight'), 4500);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [highlightCommentId, loading, repliesMap]);
 
   // Handle Like / Unlike for comment or reply
   const handleToggleLike = async (commentId) => {
@@ -772,7 +797,12 @@ export default function CommentThread({
             const avatar = (isSelf && user.avatar) ? user.avatar : comment.avatar;
 
             return (
-              <div key={comment.id} style={{ display: 'flex', gap: '12px' }}>
+              <div
+                key={comment.id}
+                id={`comment-${comment.id}`}
+                className={highlightCommentId === comment.id ? 'comment-target-highlight' : ''}
+                style={{ display: 'flex', gap: '12px', transition: 'all 0.3s ease' }}
+              >
                 <UserAvatar name={author} avatar={avatar} size={34} />
 
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -1142,7 +1172,12 @@ export default function CommentThread({
                             const replyAvatar = (isReplySelf && user.avatar) ? user.avatar : reply.avatar;
 
                             return (
-                              <div key={reply.id} style={{ display: 'flex', gap: '10px' }}>
+                              <div
+                                key={reply.id}
+                                id={`comment-${reply.id}`}
+                                className={highlightCommentId === reply.id ? 'comment-target-highlight' : ''}
+                                style={{ display: 'flex', gap: '10px', transition: 'all 0.3s ease' }}
+                              >
                                 <UserAvatar name={replyAuthor} avatar={replyAvatar} size={28} />
 
                                 <div style={{ flex: 1, minWidth: 0 }}>

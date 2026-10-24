@@ -1,10 +1,12 @@
 import './globals.css';
+import './gloabal.feed.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import { LanguageProvider } from '../context/LanguageContext';
 import { AuthProvider } from '../context/AuthContext';
 import { PlayerProvider } from '../context/PlayerContext';
 import Navbar from '../components/Navbar';
 import GlobalPlayer from '../components/GlobalPlayer';
+import MobileBottomNav from '../components/MobileBottomNav';
 import PWARegister from '../components/PWARegister';
 import { clerkAppearance } from '../lib/clerkAppearance';
 
@@ -65,12 +67,13 @@ export default function RootLayout({ children }) {
           <LanguageProvider>
             <AuthProvider>
               <PlayerProvider>
-                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: '96px' }}>
+                <div className="site-layout-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: '96px' }}>
                   <Navbar />
                   <main style={{ flex: 1, maxWidth: '1380px', width: '100%', margin: '0 auto', padding: '24px 20px' }}>
                     {children}
                   </main>
                   <GlobalPlayer />
+                  <MobileBottomNav />
                   <PWARegister />
                 </div>
               </PlayerProvider>

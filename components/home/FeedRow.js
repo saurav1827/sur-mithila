@@ -42,7 +42,6 @@ export default function FeedRow({ row }) {
                     {row.songs.map((song) => (
                         <div className="row-item" key={song.id}>
                             <SongCard song={song} />
-                            {song.reason && <span className="reason-tag">{song.reason}</span>}
                         </div>
                     ))}
                 </div>

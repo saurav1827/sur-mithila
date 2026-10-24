@@ -232,7 +232,7 @@ export default function LyricsTheatre({ lyrics, canonicalTitle, writer, traditio
       )}
 
       {/* Synchronized Karaoke-Style Lyrics Body */}
-      <div 
+      <div
         ref={scrollContainerRef}
         className="karaoke-scroll-box"
         style={{

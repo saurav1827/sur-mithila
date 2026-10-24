@@ -1,0 +1,1696 @@
+[
+  {
+    "_id": "artist_maithili_thakur",
+    "slug": "maithili-thakur",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856382/sur_mithila_artists/artist_maithili_thakur.jpg",
+    "awards": [
+      "उस्ताद बिस्मिल्लाह खान युवा पुरस्कार (2021)",
+      "बिहार राज्य खादी एवं हस्तशिल्प ब्रांड एंबेसडर",
+      "राष्ट्रीय सांस्कृतिक दूत"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "संगीत नाटक अकादमी उस्ताद बिस्मिल्लाह खान युवा पुरस्कार से सम्मानित। मैथिली लोक संगीत, विद्यापति पदावली आ पारंपरिक भजनक समकालीन विश्व ध्वजवाहक।",
+      "english": "Sangeet Natak Akademi Ustad Bismillah Khan Yuva Puraskar recipient and globally acclaimed contemporary maestro of Maithili folk melodies, Vidyapati Padavali, and sacred devotional hymns."
+    },
+    "era": "समकालीन युग (Contemporary)",
+    "featured": true,
+    "gender": "female",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली",
+      "सोहर / जन्मोत्सव",
+      "ऋतु / पर्व गीत",
+      "भगवती गीत / शिव भजन",
+      "विवाह गीत",
+      "सलहेस गाथा"
+    ],
+    "name": "Maithili Thakur",
+    "name_devanagari": "मैथिली ठाकुर",
+    "name_roman": "Maithili Thakur",
+    "role": "शास्त्रीय एवं लोक गायिका",
+    "stats": {
+      "total_songs": 177,
+      "total_views": 5116818,
+      "verified_songs": 0,
+      "total_plays": 1,
+      "last_played_at": "2026-10-24 15:24:44.937000"
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "उड़ेन (Uren)",
+      "subdivision": "बेनीपट्टी (Benipatti)",
+      "district": "मधुबनी (Madhubani)",
+      "state": "बिहार (Bihar)"
+    }
+  },
+  {
+    "_id": "artist_sharda_sinha",
+    "slug": "sharda-sinha",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856377/sur_mithila_artists/artist_sharda_sinha.jpg",
+    "awards": [
+      "पद्म भूषण (2018)",
+      "पद्म श्री (1991)",
+      "संगीत नाटक अकादमी पुरस्कार (2000)",
+      "राष्ट्रीय देवी अहिल्या सम्मान"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "पद्म भूषण से अलंकृत अमर लोक गायिका, बिहार कोकिला शारदा सिन्हा। छठि पर्व, भगवती वंदना, विवाह आ समदाउन गीतक अमर स्वर जे देश-विदेश में मिथिलाक पहचान बनल।",
+      "english": "Padma Bhushan & Padma Shri awardee, celebrated globally as Bihar Kokila. The definitive and immortal voice of Chhath Mahaparv, Bhagwati Vandana, and Mithila wedding rituals."
+    },
+    "era": "अमर शास्त्रीय युग (Golden Classical Era)",
+    "featured": true,
+    "gender": "female",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली",
+      "विवाह गीत",
+      "ऋतु / पर्व गीत",
+      "सलहेस गाथा"
+    ],
+    "name": "Sharda Sinha",
+    "name_devanagari": "शारदा सिन्हा",
+    "name_roman": "Sharda Sinha",
+    "role": "पद्म भूषण अमर लोक गायिका (बिहार कोकिला)",
+    "stats": {
+      "total_songs": 89,
+      "total_views": 2932321,
+      "verified_songs": 0,
+      "total_plays": 1,
+      "last_played_at": "2026-10-24 14:59:49.414000"
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "हुलास (Hulas)",
+      "subdivision": "राघोपुर (Raghopur)",
+      "district": "सुपौल (Supaul)",
+      "state": "बिहार (Bihar)"
+    }
+  },
+  {
+    "_id": "artist_poonam_mishra",
+    "slug": "poonam-mishra",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792858373/sur_mithila_artists/artist_poonam_mishra.jpg",
+    "awards": [
+      "मिथिला रत्न सम्मान",
+      "चेतना समिति सुर सम्मान",
+      "मिथिला विभूति"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "प्रसिद्ध मैथिली पारंपरिक एवं भगवती भजन गायिका। मिथिलाक देवी स्थान, जागरण आ विवाह-संस्कारक अत्यंत लोकप्रिय आ सुरीली गायिका।",
+      "english": "Beloved Maithili folk and devotional vocalist whose resonant renderings of Bhagwati Geets, festive bhajans, and marriage ceremonies are celebrated across North India and Nepal."
+    },
+    "era": "समकालीन लोक युग",
+    "featured": true,
+    "gender": "female",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली",
+      "विवाह गीत",
+      "भगवती गीत / शिव भजन",
+      "ऋतु / पर्व गीत",
+      "सोहर / जन्मोत्सव",
+      "सलहेस गाथा"
+    ],
+    "name": "Poonam Mishra",
+    "name_devanagari": "पूनम मिश्रा",
+    "name_roman": "Poonam Mishra",
+    "role": "प्रसिद्ध मैथिली पारंपरिक गायिका",
+    "stats": {
+      "total_songs": 132,
+      "total_views": 3904887,
+      "verified_songs": 0,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "लखनौर / मिथिला",
+      "subdivision": "दरभंगा",
+      "district": "दरभंगा (Darbhanga)",
+      "state": "बिहार (Bihar)"
+    }
+  },
+  {
+    "_id": "artist_kunj_bihari_mishra",
+    "slug": "kunj-bihari-mishra",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856664/sur_mithila_artists/artist_kunj_bihari_mishra.jpg",
+    "awards": [
+      "मिथिला विभूति सम्मान",
+      "विद्यापति पुरस्कार",
+      "शास्त्रीय संगीत साधक"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मैथिली शास्त्रीय एवं पारंपरिक संगीतक मूर्धन्य गायक। विद्यापति राग, महेशवाणी आ भगवती वंदनाक अद्वितीय साधक।",
+      "english": "Virtuoso classical vocalist of Mithila, renowned for rigorous command over ancient Vidyapati ragas, Shiv Nachari, and traditional devotional expositions."
+    },
+    "era": "शास्त्रीय संगीत युग",
+    "featured": true,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली",
+      "भगवती गीत / शिव भजन",
+      "विवाह गीत",
+      "ऋतु / पर्व गीत",
+      "सलहेस गाथा"
+    ],
+    "name": "Kunj Bihari Mishra",
+    "name_devanagari": "कुंज बिहारी मिश्र",
+    "name_roman": "Kunj Bihari Mishra",
+    "role": "शास्त्रीय मैथिली गायक एवं सुर साधक",
+    "stats": {
+      "total_songs": 42,
+      "total_views": 1229357,
+      "verified_songs": 0,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "मंगरौनी (Mangrauni)",
+      "subdivision": "मधुबनी",
+      "district": "मधुबनी (Madhubani)",
+      "state": "बिहार (Bihar)"
+    }
+  },
+  {
+    "_id": "artist_dilip_darbhangiya",
+    "slug": "dilip-darbhangiya",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856679/sur_mithila_artists/artist_dilip_darbhangiya.jpg",
+    "awards": [
+      "जनकवि लोक सम्मान",
+      "मिथिला संगीत गौरव"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मैथिली लोकगीतक अत्यंत लोकप्रिय गायक। समकालीन लगनी, विवाह गीत, होली आ हास्य-व्यंग्य गीतोक अद्वितीय कलाकार।",
+      "english": "Prolific grassroots Maithili folk vocalist and entertainer, famous for cheerful festive songs, Vivah Lagani, and spirited seasonal folk melodies."
+    },
+    "era": "समकालीन लोक युग",
+    "featured": true,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली",
+      "भगवती गीत / शिव भजन",
+      "ऋतु / पर्व गीत",
+      "सलहेस गाथा"
+    ],
+    "name": "Dilip Darbhangiya",
+    "name_devanagari": "दिलीप दरभंगिया",
+    "name_roman": "Dilip Darbhangiya",
+    "role": "लोकप्रिय मैथिली जनगायक",
+    "stats": {
+      "total_songs": 50,
+      "total_views": 1518860,
+      "verified_songs": 0,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "दरभंगा नगर",
+      "subdivision": "दरभंगा",
+      "district": "दरभंगा (Darbhanga)",
+      "state": "बिहार (Bihar)"
+    }
+  },
+  {
+    "_id": "artist_madhav_rai",
+    "slug": "madhav-rai",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856682/sur_mithila_artists/artist_madhav_rai.jpg",
+    "awards": [
+      "विद्यापति स्मृति सम्मान",
+      "मिथिला विभूति"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "सुप्रसिद्ध मैथिली सुगम संगीत गायक। विद्यापति पदावली आ आधुनिक मैथिली भावगीतोक सशक्त आ सुरीला स्वर।",
+      "english": "Celebrated modern Maithili melodist whose smooth vocal style has modernized Vidyapati compositions and lyrical bhavgeets for new generations."
+    },
+    "era": "आधुनिक सुगम संगीत युग",
+    "featured": true,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विवाह गीत",
+      "ऋतु / पर्व गीत",
+      "सलहेस गाथा"
+    ],
+    "name": "Madhav Rai",
+    "name_devanagari": "माधव राय",
+    "name_roman": "Madhav Rai",
+    "role": "मैथिली सुगम संगीत गायक",
+    "stats": {
+      "total_songs": 40,
+      "total_views": 1213203,
+      "verified_songs": 15,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "लोहना (Lohna)",
+      "subdivision": "झंझारपुर",
+      "district": "मधुबनी (Madhubani)",
+      "state": "बिहार (Bihar)"
+    }
+  },
+  {
+    "_id": "artist_snehlata",
+    "slug": "snehlata",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856690/sur_mithila_artists/artist_snehlata.jpg",
+    "awards": [
+      "संगीत साधक सम्मान"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "शास्त्रीय सुर-तालक पारंगत गायिका। मैथिली सोहर, समदाउन, भगवती वंदना आ विवाहक पारंपरिक लोकगीत लेल समर्पित।",
+      "english": "Classical and folk songstress acclaimed for timeless renditions of Sohar, Samdaun, and traditional wedding sanskar songs."
+    },
+    "era": "पारंपरिक युग",
+    "featured": true,
+    "gender": "female",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली",
+      "विवाह गीत",
+      "नचारी / महेशवाणी",
+      "सोहर / जन्मोत्सव"
+    ],
+    "name": "Snehlata",
+    "name_devanagari": "स्नेहलता",
+    "name_roman": "Snehlata",
+    "role": "शास्त्रीय एवं पारंपरिक गायिका",
+    "stats": {
+      "total_songs": 88,
+      "total_views": 2604107,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_julie_jha",
+    "slug": "julie-jha",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856686/sur_mithila_artists/artist_julie_jha.jpg",
+    "awards": [
+      "मिथिला स्वर माधुरी"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "सुमधुर स्वरक धनी मैथिली गायिका। भगवती वंदना, छठि गीत आ मिथिलाक धार्मिक गीतोक लोकप्रिय साधक।",
+      "english": "Popular devotional and wedding singer whose sweet voice has touched millions during religious festivals across the region."
+    },
+    "era": "समकालीन लोक युग",
+    "featured": true,
+    "gender": "female",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विवाह गीत",
+      "ऋतु / पर्व गीत",
+      "सलहेस गाथा"
+    ],
+    "name": "Julie Jha",
+    "name_devanagari": "जूली झा",
+    "name_roman": "Julie Jha",
+    "role": "मैथिली लोक एवं भजन गायिका",
+    "stats": {
+      "total_songs": 38,
+      "total_views": 1239340,
+      "verified_songs": 15
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_vikas_jha",
+    "slug": "vikas-jha",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856684/sur_mithila_artists/artist_vikas_jha.jpg",
+    "awards": [
+      "मिथिला युवा गौरव"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "समकालीन मैथिली लोक संगीतक ऊर्जावान गायक एवं संगीतकार। युवा पीढ़ी में मैथिली संगीत प्रति आकर्षण बढ़यबाक श्रेय।",
+      "english": "Dynamic contemporary folk artist and composer bringing modern arrangement to traditional Maithili roots."
+    },
+    "era": "आधुनिक युग",
+    "featured": false,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत",
+      "विद्यापति पदावली",
+      "भगवती गीत"
+    ],
+    "name": "Vikas Jha",
+    "name_devanagari": "विकास झा",
+    "name_roman": "Vikas Jha",
+    "role": "विख्यात लोकगायक एवं संगीतकार",
+    "stats": {
+      "total_songs": 33,
+      "total_views": 838356,
+      "verified_songs": 15
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_harinath_jha",
+    "slug": "harinath-jha",
+    "avatar_url": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80",
+    "awards": [
+      "शास्त्रीय संगीत गौरव"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "शास्त्रीय संगीतक मूर्धन्य विद्वान। मिथिलाक पौराणिक भगवती वंदना, महेशवाणी आ विद्यापति पदावलीक शुद्ध शास्त्रीय गायक।",
+      "english": "Venerated classical maestro whose renditions of ancient Bhagwati Vandana and Vidyapati poetry remain legendary benchmarks."
+    },
+    "era": "शास्त्रीय युग",
+    "featured": true,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली",
+      "विवाह गीत"
+    ],
+    "name": "Harinath Jha",
+    "name_devanagari": "पण्डित हरिनाथ झा",
+    "name_roman": "Pandit Harinath Jha",
+    "role": "शास्त्रीय संगीत साधक एवं गायक",
+    "stats": {
+      "total_songs": 25,
+      "total_views": 742377,
+      "verified_songs": 15
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_pravesh_mallick",
+    "slug": "pravesh-mallick",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856702/sur_mithila_artists/artist_pravesh_mallick.jpg",
+    "awards": [
+      "राष्ट्रीय फिल्म संगीत प्रतिभा"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "बॉलीवुड पार्श्वगायक एवं संगीत निर्देशक। राष्ट्रीय स्तर पर मैथिली माटिक खुशबू आ सूफी-लोक संगीतक अद्भुत समन्वय।",
+      "english": "Bollywood playback singer and composer known for bringing Maithili soul and pan-Indian fusion to mainstream cinema."
+    },
+    "era": "समकालीन युग",
+    "featured": true,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "ऋतु / पर्व गीत",
+      "विद्यापति पदावली"
+    ],
+    "name": "Pravesh Mallick",
+    "name_devanagari": "प्रवेश मल्लिक",
+    "name_roman": "Pravesh Mallick",
+    "role": "बॉलीवुड पार्श्वगायक एवं संगीतकार",
+    "stats": {
+      "total_songs": 20,
+      "total_views": 607592,
+      "verified_songs": 15
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_sannu_kumar",
+    "slug": "sannu-kumar",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792858372/sur_mithila_artists/artist_sannu_kumar.jpg",
+    "awards": [
+      "मिथिला युवा प्रतिभा"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मिथिलाक लोकप्रिय युवा लोकगायक। सहज मैथिली भाषा आ कर्णप्रिय संगीत संयोजनक लेल प्रसिद्ध।",
+      "english": "Beloved youth folk singer popular across North Bihar for catchy festive and social tunes."
+    },
+    "era": "समकालीन लोक युग",
+    "featured": false,
+    "gender": "male",
+    "genres": [
+      "भगवती गीत",
+      "मैथिली लोकगीत"
+    ],
+    "name": "Sannu Kumar",
+    "name_devanagari": "सन्नू कुमार",
+    "name_roman": "Sannu Kumar",
+    "role": "लोकप्रिय युवा लोकगायक",
+    "stats": {
+      "total_songs": 18,
+      "total_views": 531487,
+      "verified_songs": 15
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_vidyapati",
+    "slug": "vidyapati",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856396/sur_mithila_artists/artist_vidyapati.jpg",
+    "awards": [
+      "मैथिल कोकिल उपाधि",
+      "अभिनव जयदेव",
+      "मिथिला शिरोमणि"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मैथिल कोकिल, अभिनव जयदेव महाकवि विद्यापति। मैथिली साहित्य आ संगीतक आदि जनक। हुनक पदावली, महेशवाणी, नचारी आ भगवती वंदना संपूर्ण भारतीय संस्कृति के अमूल्य धरोहर छी।",
+      "english": "Revered as Maithil Kokil (The Cuckoo of Mithila) and Abhinava Jayadeva. 14th-century master whose musical poetry shaped the bedrock of Maithili classical and devotional literature."
+    },
+    "era": "मध्यकालीन शास्त्रीय युग (14th Century Classical)",
+    "featured": true,
+    "gender": "male",
+    "genres": [
+      "भगवती गीत",
+      "मैथिली लोकगीत",
+      "विद्यापति पदावली",
+      "नचारी / महेशवाणी",
+      "ऋतु / पर्व गीत",
+      "सलहेस गाथा"
+    ],
+    "name": "Vidyapati",
+    "name_devanagari": "महाकवि विद्यापति",
+    "name_roman": "Mahakavi Vidyapati",
+    "role": "मैथिल कोकिल एवं पदावली जनक",
+    "stats": {
+      "total_songs": 91,
+      "total_views": 2841831,
+      "verified_songs": 0,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "बिसफी (Bisafee)",
+      "subdivision": "बिसफी",
+      "district": "मधुबनी (Madhubani)",
+      "state": "मिथिला (Mithila)"
+    }
+  },
+  {
+    "_id": "artist_udit_narayan",
+    "slug": "udit-narayan",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856560/sur_mithila_artists/artist_udit_narayan.jpg",
+    "awards": [
+      "पद्म भूषण (2016)",
+      "पद्म श्री (2009)",
+      "४ राष्ट्रीय फिल्म पुरस्कार",
+      "मिथिला गौरव सम्मान"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "पद्म भूषण से अलंकृत विश्वप्रसिद्ध पार्श्वगायक। पहिल मैथिली चलचित्र \"कन्यादान\" से संगीत यात्रा शुरू कए बॉलीवुड आ मैथिली संगीत के अमर आवाज बनलाह।",
+      "english": "Legendary playback singer honored with Padma Bhushan & 4 National Film Awards. Commenced his career with the iconic Maithili classic Kanyadaan before conquering Indian cinema."
+    },
+    "era": "गोल्डन एरा (Bollywood & Folk Legend)",
+    "featured": true,
+    "gender": "male",
+    "genres": [
+      "भगवती गीत",
+      "मैथिली लोकगीत",
+      "सलहेस गाथा"
+    ],
+    "name": "Udit Narayan",
+    "name_devanagari": "उदित नारायण झा",
+    "name_roman": "Udit Narayan",
+    "role": "पद्म भूषण पार्श्वगायक",
+    "stats": {
+      "total_songs": 17,
+      "total_views": 602616,
+      "verified_songs": 0,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "बैसी (Baisi)",
+      "subdivision": "सुपौल",
+      "district": "सुपौल (Supaul)",
+      "state": "बिहार (Bihar)"
+    }
+  },
+  {
+    "_id": "artist_rajni_pallavi",
+    "slug": "rajni-pallavi",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792858371/sur_mithila_artists/artist_rajni_pallavi.jpg",
+    "awards": [
+      "शास्त्रीय सुर साधक सम्मान",
+      "विद्यापति पुरस्कार"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मैथिली सुगम आ शास्त्रीय संगीतक प्रतिष्ठित गायिका। विद्यापति गीतोक राग-आधारित शुद्ध गायकीक लेल ख्यातिप्राप्त।",
+      "english": "Eminent classical and semi-classical exponent of Maithili music, recognized for rag-pure expositions of Vidyapati verse."
+    },
+    "era": "शास्त्रीय संगीत युग",
+    "featured": true,
+    "gender": "female",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली"
+    ],
+    "name": "Rajni Pallavi",
+    "name_devanagari": "रजनी पल्लवी",
+    "name_roman": "Rajni Pallavi",
+    "role": "मैथिली शास्त्रीय एवं सुगम संगीत साधक",
+    "stats": {
+      "total_songs": 14,
+      "total_views": 327372,
+      "verified_songs": 13,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "समस्तीपुर / दरभंगा",
+      "district": "समस्तीपुर (Samastipur)",
+      "state": "बिहार (Bihar)"
+    }
+  },
+  {
+    "_id": "artist_anuradha_paudwal",
+    "slug": "anuradha-paudwal",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856661/sur_mithila_artists/artist_anuradha_paudwal.jpg",
+    "awards": [
+      "पद्म श्री (2017)",
+      "राष्ट्रीय फिल्म पुरस्कार"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "पद्म श्री से अलंकृत सुप्रसिद्ध भारतीय पार्श्वगायक। मैथिली भक्ति संगीत, छठि गीत आ भगवती वंदना में अद्वितीय योगदान।",
+      "english": "Padma Shri playback legend whose devotional albums in Maithili remain staples across homes and temples."
+    },
+    "era": "गोल्डन एरा",
+    "featured": false,
+    "gender": "female",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "Anuradha Paudwal",
+    "name_devanagari": "अनुराधा पौडवाल",
+    "name_roman": "Anuradha Paudwal",
+    "role": "पद्म श्री पार्श्वगायक",
+    "stats": {
+      "total_songs": 7,
+      "total_views": 238697,
+      "verified_songs": 0,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "मुंबई",
+      "district": "मुंबई (Mumbai)",
+      "state": "महाराष्ट्र (Maharashtra)"
+    }
+  },
+  {
+    "_id": "artist_suresh_wadkar",
+    "slug": "suresh-wadkar",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856658/sur_mithila_artists/artist_suresh_wadkar.jpg",
+    "awards": [
+      "पद्म श्री (2020)",
+      "संगीत नाटक अकादमी"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "पद्म श्री से अलंकृत शास्त्रीय संगीत गुरु आ पार्श्वगायक। मैथिली भक्ति रचना आ विद्यापति गीतोक विशिष्ट गायक।",
+      "english": "Padma Shri classical master whose soulful timbre graces several iconic Maithili devotional suites."
+    },
+    "era": "शास्त्रीय संगीत युग",
+    "featured": false,
+    "gender": "male",
+    "genres": [],
+    "name": "Suresh Wadkar",
+    "name_devanagari": "सुरेश वाडेकर",
+    "name_roman": "Suresh Wadkar",
+    "role": "पद्म श्री शास्त्रीय पार्श्वगायक",
+    "stats": {
+      "total_songs": 0,
+      "total_views": 0,
+      "verified_songs": 0,
+      "total_plays": 0
+    },
+    "top_song_slugs": [],
+    "origin": {
+      "village": "कोल्हापुर / मुंबई",
+      "district": "मुंबई",
+      "state": "महाराष्ट्र"
+    }
+  },
+  {
+    "_id": "artist_priyanka_singh",
+    "slug": "priyanka-singh",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792858369/sur_mithila_artists/artist_priyanka_singh.jpg",
+    "awards": [
+      "सर्वश्रेष्ठ पार्श्वगायिका पुरस्कार"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मिथिला आ बिहारक लोकप्रिय पार्श्वगायिका। आधुनिक एवं पारंपरिक मैथिली गीतोक सशक्त स्वर।",
+      "english": "Leading regional playback star famed for energetic festive tracks and sweet acoustic folk."
+    },
+    "era": "समकालीन युग",
+    "featured": false,
+    "gender": "female",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "Priyanka Singh",
+    "name_devanagari": "प्रियंका सिंह",
+    "name_roman": "Priyanka Singh",
+    "role": "सुप्रसिद्ध पार्श्वगायिका",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 35784,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_hemkant_jha",
+    "slug": "hemkant-jha",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792858370/sur_mithila_artists/artist_hemkant_jha.jpg",
+    "awards": [
+      "लोक संस्कृति सेवा सम्मान"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मैथिली लोकगीत आ भगवती वंदनाक वयोवृद्ध गायक। पारंपरिक आकाशवाणी एवं दूरदर्शनक सम्मानित कलाकार।",
+      "english": "Veteran AIR broadcaster and folk traditionalist preserving ancestral regional compositions."
+    },
+    "era": "आकाशवाणी स्वर्ण युग",
+    "featured": false,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "Hemkant Jha",
+    "name_devanagari": "हेमकांत झा",
+    "name_roman": "Hemkant Jha",
+    "role": "पारंपरिक मैथिली गायक",
+    "stats": {
+      "total_songs": 4,
+      "total_views": 123962,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_hariharan",
+    "slug": "hariharan",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792858367/sur_mithila_artists/artist_hariharan.jpg",
+    "awards": [
+      "पद्म श्री (2004)",
+      "2 राष्ट्रीय फिल्म पुरस्कार"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "पद्म श्री से अलंकृत भारतीय संगीतज्ञ। मैथिली भक्ति एवं शास्त्रीय रचना सबहक कर्णप्रिय गायक।",
+      "english": "Padma Shri ghazal and playback legend who lent his divine voice to sublime Maithili classical projects."
+    },
+    "era": "शास्त्रीय संगीत सम्राट",
+    "featured": false,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "Hariharan",
+    "name_devanagari": "हरिहरन",
+    "name_roman": "Hariharan",
+    "role": "पद्म श्री पार्श्वगायक एवं गजल सम्राट",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 51553,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_vaidyanath_mishra_yatri",
+    "slug": "vaidyanath-mishra-yatri",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856776/sur_mithila_artists/artist_vaidyanath_mishra_yatri.jpg",
+    "awards": [
+      "साहित्य अकादमी पुरस्कार (1968)",
+      "भारत भारती सम्मान"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "महाकवि नागार्जुन, मैथिली साहित्य में \"यात्री\" नाम सँ विख्यात। पत्रहीन नग्न गाछ लेल साहित्य अकादमी पुरस्कार प्राप्त जनकवि।",
+      "english": "Revered people's poet and Sahitya Akademi winner Baba Nagarjun, celebrated under the pen-name Yatri in Maithili literature."
+    },
+    "era": "आधुनिक मैथिली साहित्य युग",
+    "featured": true,
+    "gender": "male",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "Vaidyanath Mishra Yatri",
+    "name_devanagari": "वैद्यनाथ मिश्र यात्री (नागार्जुन)",
+    "name_roman": "Vaidyanath Mishra Yatri",
+    "role": "जनकवि एवं साहित्य अकादमी पुरस्कृता",
+    "stats": {
+      "total_songs": 61,
+      "total_views": 1837008,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_paramparik",
+    "slug": "paramparik",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856711/sur_mithila_artists/artist_paramparik.jpg",
+    "awards": [
+      "अमर लोक धरोहर",
+      "मिथिला संस्कृति कंठहार"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मिथिलाक सदियौ पुरान लोक परंपरा, माता-बहिन सबहक कंठहार गीत, सोहर, समदाउन, नचारी, बटगमनी आ विवाहक अमर लोक संस्कृति। ई कोनो एक व्यक्तिक नहि, अपितु संपूर्ण मिथिलाक सामूहिक सांस्कृतिक आत्मा छी।",
+      "english": "The timeless ancestral folk heritage of Mithila, preserved over centuries across village courtyards, sacred domestic ceremonies, Vivah Sanskar, Sohar, and festive community gatherings."
+    },
+    "era": "सनातन लोक परंपरा (Timeless Heritage)",
+    "featured": true,
+    "gender": "ensemble",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विवाह गीत",
+      "नचारी / महेशवाणी",
+      "सोहर / जन्मोत्सव",
+      "भगवती गीत / शिव भजन",
+      "सलहेस गाथा",
+      "ऋतु / पर्व गीत"
+    ],
+    "name": "पारंपरिक",
+    "name_devanagari": "पारंपरिक लोक गायक",
+    "name_roman": "Traditional Folk Ensemble",
+    "role": "मिथिला लोक संस्कृति धरोहर",
+    "stats": {
+      "total_songs": 1348,
+      "total_views": 40848917,
+      "verified_songs": 0,
+      "total_plays": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "origin": {
+      "village": "मिथिलांचल (Mithilanchal)",
+      "subdivision": "समस्त क्षेत्र",
+      "district": "दरभंगा, मधुबनी, सुपौल, सहरसा, सीतामढ़ी",
+      "state": "बिहार / नेपाल (Mithila)"
+    }
+  },
+  {
+    "_id": "artist_artist_23",
+    "slug": "artist-23",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "अरविंद सिंह - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "अरविंद सिंह - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत"
+    ],
+    "name": "अरविंद सिंह",
+    "name_devanagari": "अरविंद सिंह",
+    "name_roman": "अरविंद सिंह",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 6,
+      "total_views": 206755,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_amit_jha",
+    "slug": "amit-jha",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "Amit Jha - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "Amit Jha - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत",
+      "भगवती गीत",
+      "विद्यापति पदावली",
+      "विवाह गीत"
+    ],
+    "name": "Amit Jha",
+    "name_devanagari": "Amit Jha",
+    "name_roman": "Amit Jha",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 18,
+      "total_views": 463311,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_25",
+    "slug": "artist-25",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "राकेश पासवान - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "राकेश पासवान - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "राकेश पासवान",
+    "name_devanagari": "राकेश पासवान",
+    "name_roman": "राकेश पासवान",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 49188,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_26",
+    "slug": "artist-26",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "सुमन सौरभ - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "सुमन सौरभ - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "सुमन सौरभ",
+    "name_devanagari": "सुमन सौरभ",
+    "name_roman": "सुमन सौरभ",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 2,
+      "total_views": 66400,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_27",
+    "slug": "artist-27",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "देवी - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "देवी - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "भगवती गीत"
+    ],
+    "name": "देवी",
+    "name_devanagari": "देवी",
+    "name_roman": "देवी",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 25621,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_28",
+    "slug": "artist-28",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "शिवानी भगत - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "शिवानी भगत - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "भगवती गीत"
+    ],
+    "name": "शिवानी भगत",
+    "name_devanagari": "शिवानी भगत",
+    "name_roman": "शिवानी भगत",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 54336,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_29",
+    "slug": "artist-29",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "अंजू - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "अंजू - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "अंजू",
+    "name_devanagari": "अंजू",
+    "name_roman": "अंजू",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 23871,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_30",
+    "slug": "artist-30",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "सुरेश पंकज - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "सुरेश पंकज - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "सुरेश पंकज",
+    "name_devanagari": "सुरेश पंकज",
+    "name_roman": "सुरेश पंकज",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 2,
+      "total_views": 88940,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_31",
+    "slug": "artist-31",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "स्वर्णलता झा - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "स्वर्णलता झा - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "स्वर्णलता झा",
+    "name_devanagari": "स्वर्णलता झा",
+    "name_roman": "स्वर्णलता झा",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 2,
+      "total_views": 15761,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_32",
+    "slug": "artist-32",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "चन्द्रमणि झा - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "चन्द्रमणि झा - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "चन्द्रमणि झा",
+    "name_devanagari": "चन्द्रमणि झा",
+    "name_roman": "चन्द्रमणि झा",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 6,
+      "total_views": 217094,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_33",
+    "slug": "artist-33",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "रश्मि रानी - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "रश्मि रानी - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "रश्मि रानी",
+    "name_devanagari": "रश्मि रानी",
+    "name_roman": "रश्मि रानी",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 19542,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_34",
+    "slug": "artist-34",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "राम बाबू झा - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "राम बाबू झा - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "राम बाबू झा",
+    "name_devanagari": "राम बाबू झा",
+    "name_roman": "राम बाबू झा",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 14918,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_35",
+    "slug": "artist-35",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "सुनील छैला बिहारी - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "सुनील छैला बिहारी - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "भगवती गीत"
+    ],
+    "name": "सुनील छैला बिहारी",
+    "name_devanagari": "सुनील छैला बिहारी",
+    "name_roman": "सुनील छैला बिहारी",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 11382,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_36",
+    "slug": "artist-36",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "प्रिया मल्लिक - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "प्रिया मल्लिक - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "भगवती गीत"
+    ],
+    "name": "प्रिया मल्लिक",
+    "name_devanagari": "प्रिया मल्लिक",
+    "name_roman": "प्रिया मल्लिक",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 35951,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_37",
+    "slug": "artist-37",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "भास्वती चक्रवर्ती - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "भास्वती चक्रवर्ती - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "भास्वती चक्रवर्ती",
+    "name_devanagari": "भास्वती चक्रवर्ती",
+    "name_roman": "भास्वती चक्रवर्ती",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 39790,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_38",
+    "slug": "artist-38",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मैथिली पुत्र प्रदीप - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "मैथिली पुत्र प्रदीप - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "भगवती गीत",
+      "मैथिली लोकगीत"
+    ],
+    "name": "मैथिली पुत्र प्रदीप",
+    "name_devanagari": "मैथिली पुत्र प्रदीप",
+    "name_roman": "मैथिली पुत्र प्रदीप",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 7,
+      "total_views": 167244,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_39",
+    "slug": "artist-39",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "ममता राजे - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "ममता राजे - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "ममता राजे",
+    "name_devanagari": "ममता राजे",
+    "name_roman": "ममता राजे",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 2,
+      "total_views": 51423,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_40",
+    "slug": "artist-40",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "विनोद राठौड़ - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "विनोद राठौड़ - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "भगवती गीत"
+    ],
+    "name": "विनोद राठौड़",
+    "name_devanagari": "विनोद राठौड़",
+    "name_roman": "विनोद राठौड़",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 1,
+      "total_views": 30567,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null
+    ]
+  },
+  {
+    "_id": "artist_artist_41",
+    "slug": "artist-41",
+    "avatar_url": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "awards": [],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "काशीकान्त मिश्र मधुप - मिथिलाक लोकप्रिय गायक एवं संगीत साधक।",
+      "english": "काशीकान्त मिश्र मधुप - Dedicated Maithili vocal artist and cultural singer."
+    },
+    "era": "समकालीन",
+    "featured": false,
+    "gender": "unspecified",
+    "genres": [
+      "मैथिली लोकगीत"
+    ],
+    "name": "काशीकान्त मिश्र मधुप",
+    "name_devanagari": "काशीकान्त मिश्र मधुप",
+    "name_roman": "काशीकान्त मिश्र मधुप",
+    "role": "गायक (Maithili Artist)",
+    "stats": {
+      "total_songs": 3,
+      "total_views": 84508,
+      "verified_songs": 0
+    },
+    "top_song_slugs": [
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "_id": "6adcc7258d8811df5995ce21",
+    "slug": "dr-shanti-jain",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792858360/sur_mithila_artists/artist_dr_shanti_jain.jpg",
+    "awards": [
+      "पद्म श्री (2020)",
+      "संगीत नाटक अकादमी सम्मान",
+      "बिहार कला पुरस्कार"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "पद्म श्री से अलंकृत प्रख्यात लोक विदुषी, साहित्यकार एवं संगीतज्ञा। मैथिली-भोजपुरी लोकगीतों के प्रामाणिक संकलन, अनुसंधान एवं गायन में जीवनपर्यंत योगदान।",
+      "english": "Padma Shri scholar, folklorist, and singer who dedicated her life to authentic documentation and performance of traditional Maithili and Bhojpuri oral traditions."
+    },
+    "era": "शास्त्रीय लोक अनुसंधान युग",
+    "featured": true,
+    "gender": "female",
+    "name": "Dr. Shanti Jain",
+    "name_devanagari": "डॉ. शांति जैन",
+    "name_roman": "Dr. Shanti Jain",
+    "origin": {
+      "village": "आरा / पटना",
+      "subdivision": "भोजपुर",
+      "district": "भोजपुर / पटना",
+      "state": "बिहार (Bihar)"
+    },
+    "role": "पद्म श्री लोक संस्कृति विदुषी एवं गायिका",
+    "stats": {
+      "total_songs": 0,
+      "total_plays": 0,
+      "verified_songs": 0
+    }
+  },
+  {
+    "_id": "6adcc7258d8811df5995ce22",
+    "slug": "rama-jha",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792858365/sur_mithila_artists/artist_rama_jha.jpg",
+    "awards": [
+      "मिथिला विदुषी सम्मान"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "मैथिली पारंपरिक संस्कार, कोहबर, समदाउन आ विवाह गीतोक प्रतिष्ठित एवं वरिष्ठ गायिका।",
+      "english": "Senior tradition bearer recognized for authentic rendering of domestic Vivah rituals, Kohbar geet, and auspicious family celebrations."
+    },
+    "era": "पारंपरिक संस्कार युग",
+    "featured": false,
+    "gender": "female",
+    "name": "Rama Jha",
+    "name_devanagari": "रमा झा",
+    "name_roman": "Rama Jha",
+    "origin": {
+      "village": "झंझारपुर",
+      "district": "मधुबनी (Madhubani)",
+      "state": "बिहार (Bihar)"
+    },
+    "role": "वरिष्ठ मैथिली संस्कार गायिका",
+    "stats": {
+      "total_songs": 0,
+      "total_plays": 0,
+      "verified_songs": 0
+    }
+  },
+  {
+    "_id": "6adcc7258d8811df5995ce23",
+    "slug": "chandan-tiwari",
+    "avatar_url": "https://res.cloudinary.com/df6sjkg3j/image/upload/v1792856650/sur_mithila_artists/artist_chandan_tiwari.jpg",
+    "awards": [
+      "उस्ताद बिस्मिल्लाह खान युवा पुरस्कार",
+      "लोक सुर श्री सम्मान"
+    ],
+    "banner_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
+    "bio": {
+      "maithili": "उस्ताद बिस्मिल्लाह खान युवा पुरस्कार से अलंकृत लोक गायिका। बिहारक पारंपरिक पुरबिया, मैथिली आ लोक संस्कार गीतोक समर्पित साधिका।",
+      "english": "Sangeet Natak Akademi Ustad Bismillah Khan Yuva Puraskar winner dedicated to reviving classical Maithili and Purabiya traditions."
+    },
+    "era": "समकालीन लोक युग",
+    "featured": true,
+    "gender": "female",
+    "name": "Chandan Tiwari",
+    "name_devanagari": "चंदन तिवारी",
+    "name_roman": "Chandan Tiwari",
+    "origin": {
+      "village": "बड़कागांव",
+      "district": "भोजपुर (Bhojpur)",
+      "state": "बिहार (Bihar)"
+    },
+    "role": "युवा लोक गायिका (बिस्मिल्लाह खान पुरस्कार)",
+    "stats": {
+      "total_songs": 0,
+      "total_plays": 0,
+      "verified_songs": 0
+    }
+  }
+]

@@ -5,6 +5,7 @@ import { getDatabase } from '../../../../lib/mongodb';
 import { recordingFilter } from '../../../../lib/community-service';
 import { moderateComment } from '../../../../lib/ai-agents';
 import { getAuthRole } from '../../../../lib/authz';
+import { createNotification, dispatchMentions } from '../../../../lib/notification-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -190,6 +191,77 @@ export async function POST(req) {
       await db.collection('community_recordings').updateOne(recordingFilter(recordingId), { $inc: { comments_count: 1 } });
     } catch (e) {
       console.error('[Community Comments] Count increment error:', e);
+    }
+
+    // Trigger notifications asynchronously
+    try {
+      const snippet = text.trim().slice(0, 80);
+      const insertedCommentId = res.insertedId.toString();
+      const targetUrl = `/community?recordingId=${encodeURIComponent(recordingId)}&commentId=${insertedCommentId}&openComments=true`;
+
+      // Resolve true song title from recording + songs collection
+      const rec = await db.collection('community_recordings').findOne(recordingFilter(recordingId), {
+        projection: { user_id: 1, song_title: 1, song_slug: 1, song_id: 1, title: 1 }
+      });
+      let songTitle = rec?.song_title;
+      const slug = rec?.song_slug || rec?.song_id;
+      if (!songTitle && slug) {
+        const orig = await db.collection('songs').findOne({ slug }, { projection: { 'title.canonical': 1, 'title.en': 1 } });
+        songTitle = orig?.title?.canonical || orig?.title?.en;
+      }
+      songTitle = songTitle || rec?.title || 'अहाँक गान';
+
+      if (parentId) {
+        // Notification for comment reply
+        let parentQuery = { _id: parentId };
+        if (ObjectId.isValid(parentId)) {
+          parentQuery = { $or: [{ _id: new ObjectId(parentId) }, { _id: parentId }] };
+        }
+        const parentComment = await db.collection('community_comments').findOne(parentQuery);
+        if (parentComment?.user_id) {
+          await createNotification({
+            recipientId: parentComment.user_id,
+            actorId: userId,
+            actorName: authorName || 'एक सदस्य',
+            actorAvatar: authorAvatar || null,
+            type: 'comment_reply',
+            resourceId: recordingId,
+            resourceType: 'community_recording',
+            resourceTitle: songTitle,
+            textPreview: snippet,
+            targetUrl
+          });
+        }
+      } else {
+        // Notification for top-level comment on post to recording author
+        if (rec?.user_id) {
+          await createNotification({
+            recipientId: rec.user_id,
+            actorId: userId,
+            actorName: authorName || 'एक सदस्य',
+            actorAvatar: authorAvatar || null,
+            type: 'recording_comment',
+            resourceId: recordingId,
+            resourceType: 'community_recording',
+            resourceTitle: songTitle,
+            textPreview: snippet,
+            targetUrl
+          });
+        }
+      }
+
+      // Handle mentions (@username or @name)
+      await dispatchMentions({
+        text: text.trim(),
+        actorId: userId,
+        actorName: authorName || 'एक सदस्य',
+        actorAvatar: authorAvatar || null,
+        resourceId: recordingId,
+        resourceTitle: songTitle,
+        targetUrl
+      });
+    } catch (notifErr) {
+      console.error('[Community Comments] Notification dispatch error:', notifErr);
     }
 
     return NextResponse.json({
