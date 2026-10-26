@@ -4,9 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import { PlayCircle, Mic2, Radio, Play } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
+import { recordCoverInHistory } from '../lib/history-utils';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function VersionsStrip({ workId, recordings, currentRecordingId }) {
   const { playTrack, currentTrack, isPlaying } = usePlayer();
+  const { t, isEnglish } = useLanguage();
 
   if (!recordings || recordings.length <= 1) {
     return null;
@@ -17,10 +20,10 @@ export default function VersionsStrip({ workId, recordings, currentRecordingId }
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h3 className="font-traditional" style={{ fontSize: '1.25rem', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
           <Mic2 size={20} color="var(--neon-saffron)" />
-          अन्य संस्करण एवं कवर्स (Versions & Community Covers)
+          {t('अन्य संस्करण एवं कवर्स (Versions & Community Covers)', 'Versions & Community Covers', 'अन्य संस्करण एवं कवर्स')}
         </h3>
         <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-          {recordings.length} Recordings Available
+          {recordings.length} {t('संस्करण उपलब्ध (Recordings)', 'Recordings Available', 'संस्करण उपलब्ध')}
         </span>
       </div>
 
@@ -34,6 +37,17 @@ export default function VersionsStrip({ workId, recordings, currentRecordingId }
             <div
               key={rec.recording_id || rec.id || `rec_${idx}`}
               onClick={() => {
+                const isCover = rec.version?.type === 'cover' || rec.audio?.hosted_audio_url?.includes('sur_mithila_covers') || rec.recording_id?.startsWith('rec_');
+                if (isCover) {
+                  recordCoverInHistory({
+                    recording_id: rec.recording_id || rec.id,
+                    slug: workId,
+                    title: currentTrack?.song?.title?.canonical || currentTrack?.song?.title || rec.artist_name,
+                    artist_name: rec.artist_name,
+                    audio: rec.audio,
+                    poster: rec.poster?.image_url || rec.poster || thumbnail
+                  });
+                }
                 playTrack(currentTrack?.song || { slug: workId, title: { canonical: rec.artist_name } }, rec);
               }}
               className="song-card"
@@ -63,7 +77,7 @@ export default function VersionsStrip({ workId, recordings, currentRecordingId }
                     border: '1px solid rgba(255, 255, 255, 0.2)'
                   }}
                 >
-                  {type}
+                  {type === 'original' ? t('मूल (Original)', 'Original', 'मूल') : t('कवर (Cover)', 'Cover', 'कवर')}
                 </span>
 
                 {/* Play Icon / Visualizer Overlay */}

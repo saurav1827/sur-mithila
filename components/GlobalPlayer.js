@@ -12,8 +12,10 @@ import {
 import YoutubeIcon from './YoutubeIcon';
 import YouTube from 'react-youtube';
 import { transliterateLyrics } from '../lib/slugs';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function GlobalPlayer() {
+  const { t, formatSongTitle, isEnglish, isMaithiliPlus } = useLanguage();
   const {
     currentTrack,
     isPlaying,
@@ -21,7 +23,9 @@ export default function GlobalPlayer() {
     togglePlay,
     closePlayer,
     currentTime,
+    setCurrentTime,
     duration,
+    setDuration,
     seekTo,
     registerPlayer,
     unregisterPlayer,
@@ -57,7 +61,20 @@ export default function GlobalPlayer() {
 
   const { song, recording } = currentTrack || {};
   const isCurrentSongPage = currentTrack ? pathname === `/songs/${currentTrack.song?.slug}` : false;
-  const youtubeId = recording?.youtube?.video_id || song?.youtube?.video_id;
+
+  const isCoverTrack =
+    currentTrack?.type === 'audio' ||
+    Boolean(recording?.recording_id) ||
+    Boolean(recording?.audio_url) ||
+    Boolean(recording?.audio?.hosted_audio_url) ||
+    Boolean(song?.id && (String(song.id).startsWith('cover-') || String(song.id).startsWith('rec_'))) ||
+    Boolean(typeof song?.title?.canonical === 'string' && song.title.canonical.includes('(Cover)')) ||
+    Boolean(typeof song?.title === 'string' && song.title.includes('(Cover)'));
+
+  // If this is an audio cover track, NEVER inherit original song's YouTube video
+  const youtubeId = isCoverTrack
+    ? (recording?.youtube?.video_id || null)
+    : (recording?.youtube?.video_id || song?.youtube?.video_id || null);
   const audioUrl = recording?.audio?.hosted_audio_url || recording?.audio_url || song?.audio?.hosted_audio_url;
 
   // Extract lyrics lines unconditionally from the cached state
@@ -74,12 +91,15 @@ export default function GlobalPlayer() {
     ? Math.min(Math.floor((currentTime / duration) * fullLines.length), fullLines.length - 1)
     : 0;
 
-  // Register HTML5 audio if audioUrl is present and no YouTube
+  // Register HTML5 audio if audioUrl is present
   useEffect(() => {
-    if (audioUrl && !youtubeId && audioRef.current) {
+    if (audioUrl && audioRef.current) {
       registerPlayer(audioRef.current, 'audio');
+      if (isPlaying) {
+        audioRef.current.play().catch(() => {});
+      }
     }
-  }, [audioUrl, youtubeId, registerPlayer]);
+  }, [audioUrl, registerPlayer, isPlaying]);
 
   // Clean up registration on unmount of mini-dock
   useEffect(() => {
@@ -115,9 +135,9 @@ export default function GlobalPlayer() {
 
   const ytId = recording?.youtube?.video_id || song?.youtube?.video_id;
   const posterUrl = recording?.poster?.image_url || song?.poster?.image_url || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
-  const title = song?.title?.canonical || song?.title?.devanagari || 'Maithili Geet';
-  const singer = recording?.artist_name || song?.credits?.singer || 'पारंपरिक';
-  const category = song?.category || 'Folk Song';
+  const title = formatSongTitle(song) || (typeof song?.title === 'string' ? song.title : null) || recording?.title || (isEnglish ? 'Maithili Song' : 'मैथिली गीत');
+  const singer = recording?.artist_name || song?.credits?.singer || (isEnglish ? 'Traditional' : 'पारंपरिक');
+  const category = song?.category || (isEnglish ? 'Folk Song' : 'मैथिली लोकगीत');
 
   const formatTime = (seconds) => {
     if (!seconds || isNaN(seconds) || seconds < 0 || !isFinite(seconds)) return '0:00';
@@ -242,10 +262,36 @@ export default function GlobalPlayer() {
   return (
     <>
       {/* HTML5 Audio Node */}
-      {audioUrl && !youtubeId && (
+      {audioUrl && (
         <audio
           ref={audioRef}
           src={audioUrl}
+          autoPlay={isPlaying}
+          onTimeUpdate={(e) => {
+            if (e.currentTarget.duration && Number.isFinite(e.currentTarget.duration)) {
+              setDuration(e.currentTarget.duration);
+            }
+            setCurrentTime(e.currentTarget.currentTime);
+          }}
+          onLoadedMetadata={(e) => {
+            const a = e.currentTarget;
+            if (Number.isFinite(a.duration) && a.duration > 0) {
+              setDuration(a.duration);
+            } else if (a.duration === Infinity) {
+              // WebM duration resolution trick for Chromium
+              const fix = () => {
+                a.removeEventListener('timeupdate', fix);
+                a.currentTime = 0;
+                if (Number.isFinite(a.duration) && a.duration > 0) {
+                  setDuration(a.duration);
+                }
+              };
+              a.addEventListener('timeupdate', fix);
+              a.currentTime = 1e10;
+            } else if (recording?.duration || song?.duration) {
+              setDuration(recording?.duration || song?.duration);
+            }
+          }}
           onEnded={() => setIsPlaying && setIsPlaying(false)}
           onPlay={() => setIsPlaying && setIsPlaying(true)}
           onPause={() => setIsPlaying && setIsPlaying(false)}
@@ -330,11 +376,11 @@ export default function GlobalPlayer() {
                 type="button"
                 onClick={() => setIsFullscreenLyrics(false)}
                 className="fs-minimize-btn"
-                title="Minimize player (छोट करू)"
+                title={t('छोट करू (Minimize)', 'Minimize player', 'छोट करू')}
                 aria-label="Minimize player"
               >
                 <ChevronDown size={20} color="#FDE047" />
-                <span className="fs-minimize-label font-traditional">छोट करू (Minimize)</span>
+                <span className="fs-minimize-label font-traditional">{t('छोट करू (Minimize)', 'Minimize', 'छोट करू')}</span>
               </button>
 
               <div className="fs-tabs-pill">
@@ -343,21 +389,21 @@ export default function GlobalPlayer() {
                   onClick={() => setFullscreenTab('devanagari')}
                   className={`fs-tab-btn ${fullscreenTab === 'devanagari' ? 'active' : ''}`}
                 >
-                  मैथिली
+                  {t('मैथिली', 'Maithili', 'मैथिली')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFullscreenTab('hindi')}
                   className={`fs-tab-btn ${fullscreenTab === 'hindi' ? 'active' : ''}`}
                 >
-                  हिंदी
+                  {t('हिंदी', 'Hindi', 'हिंदी')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFullscreenTab('roman')}
                   className={`fs-tab-btn ${fullscreenTab === 'roman' ? 'active' : ''}`}
                 >
-                  English
+                  {t('English', 'English', 'रोमन')}
                 </button>
               </div>
 
@@ -366,10 +412,10 @@ export default function GlobalPlayer() {
                 type="button"
                 onClick={() => setAutoScroll(prev => !prev)}
                 className={`fs-autoscroll-toggle-btn ${autoScroll ? 'active' : ''}`}
-                title={autoScroll ? 'Auto-scroll चालू अछि (Click to switch to Manual)' : 'Auto-scroll बंद अछि (Click to switch to Auto)'}
+                title={autoScroll ? t('Auto-scroll चालू अछि (Click to switch to Manual)', 'Auto-scroll is ON (Click to switch to Manual)', 'स्वतः स्क्रॉल चालू अछि') : t('Auto-scroll बंद अछि (Click to switch to Auto)', 'Auto-scroll is OFF (Click to switch to Auto)', 'स्वतः स्क्रॉल बंद अछि')}
               >
                 <Sparkles size={13} color={autoScroll ? '#070913' : '#FDE047'} />
-                <span>{autoScroll ? 'स्वतः स्क्रॉल ON' : 'Manual Scroll'}</span>
+                <span>{autoScroll ? t('स्वतः स्क्रॉल ON', 'Auto-Scroll ON', 'स्वतः स्क्रॉल') : t('Manual Scroll', 'Manual Scroll', 'हस्तचालित')}</span>
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -377,10 +423,10 @@ export default function GlobalPlayer() {
                   href={`/studio/${song?.slug}`}
                   onClick={() => setIsFullscreenLyrics(false)}
                   className="fs-studio-btn"
-                  title="Open Studio to Sing Karaoke"
+                  title={t('स्टूडियो में गाउ (Sing Karaoke)', 'Open Studio to Sing Karaoke', 'स्टूडियो में गाउ')}
                 >
                   <Mic size={14} color="var(--neon-saffron)" />
-                  <span className="fs-studio-label">Studio</span>
+                  <span className="fs-studio-label">{t('Studio', 'Studio', 'स्टूडियो')}</span>
                 </Link>
 
                 <button
@@ -402,14 +448,14 @@ export default function GlobalPlayer() {
                 className={`fs-mobile-mode-btn ${mobileViewMode !== 'lyrics' ? 'active' : ''}`}
                 onClick={() => setMobileViewMode('art')}
               >
-                कला (Art)
+                {t('कला (Art)', 'Cover Art', 'कला')}
               </button>
               <button
                 type="button"
                 className={`fs-mobile-mode-btn ${mobileViewMode === 'lyrics' ? 'active' : ''}`}
                 onClick={() => setMobileViewMode('lyrics')}
               >
-                बोल (Lyrics)
+                {t('बोल (Lyrics)', 'Lyrics', 'बोल')}
               </button>
             </div>
 
@@ -824,7 +870,7 @@ export default function GlobalPlayer() {
                 }}
               >
                 <BookOpen size={13} />
-                <span>बोल थियेटर (Lyrics)</span>
+                <span>{t('बोल थियेटर (Lyrics)', 'Lyrics Theatre', 'बोल थियेटर')}</span>
               </button>
 
               {/* Dynamic Visualizer Bars */}

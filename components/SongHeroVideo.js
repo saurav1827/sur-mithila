@@ -3,8 +3,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePlayer } from '../context/PlayerContext';
+import { recordCoverInHistory } from '../lib/history-utils';
 import { Play, Pause, Disc, Maximize2, Minimize2, ExternalLink, Mic, Volume2, CheckCircle2 } from 'lucide-react';
 import YouTube from 'react-youtube';
+import { useLanguage } from '../context/LanguageContext';
 
 const BARS = 36;
 function waveform(seed = 'mithila') {
@@ -18,6 +20,7 @@ function waveform(seed = 'mithila') {
 }
 
 export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initialCover }) {
+  const { t, isEnglish, isMaithiliPlus } = useLanguage();
   const {
     currentTrack,
     playTrack,
@@ -119,6 +122,13 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
         }
         audio.play().then(() => {
           setIsCoverPlaying(true);
+          recordCoverInHistory({
+            ...initialCover,
+            song_slug: song?.slug,
+            song_title: title || song?.title?.canonical,
+            song_poster: posterUrl || song?.poster?.image_url,
+            category: song?.category
+          });
         }).catch(console.error);
       }
     }
@@ -419,7 +429,7 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
               flexShrink: 0,
             }}>
               <Mic size={12} />
-              <span>Live Folk Cover</span>
+              <span>{t('लाइव लोक कवर (Live Cover)', 'Live Folk Cover', 'लाइव लोक प्रस्तुति')}</span>
             </div>
           </div>
 
@@ -484,7 +494,7 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
                     letterSpacing: '0.04em',
                     flexShrink: 0,
                   }}>
-                    PLAYING
+                    {t('बजि रहल अछि', 'PLAYING', 'बजि रहल अछि')}
                   </span>
                 )}
               </div>
@@ -497,7 +507,7 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
               }}>
-                स्वर: <strong style={{ color: '#FDE047' }}>{initialCover.userName}</strong> {initialCover.caption ? `• "${initialCover.caption}"` : ''}
+                {t('स्वर:', 'Vocals:', 'स्वर:')} <strong style={{ color: '#FDE047' }}>{initialCover.userName}</strong> {initialCover.caption ? `• "${initialCover.caption}"` : ''}
               </p>
 
               {/* Interactive Scrub Waveform */}
@@ -607,7 +617,7 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
               }}>
                 <button
                   onClick={toggleFullscreen}
-                  title={isFullscreen ? 'Exit Full Screen' : 'Full Screen (पूर्ण स्क्रीन)'}
+                  title={isFullscreen ? t('फुल स्क्रीन सं बाहर (Exit)', 'Exit Full Screen', 'फुल स्क्रीन सं बाहर') : t('पूर्ण स्क्रीन (Full Screen)', 'Full Screen', 'पूर्ण स्क्रीन')}
                   style={{
                     background: 'rgba(8, 10, 16, 0.85)',
                     backdropFilter: 'blur(12px)',
@@ -626,7 +636,7 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
                   }}
                 >
                   {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                  <span>{isFullscreen ? 'Exit' : 'Full Screen'}</span>
+                  <span>{isFullscreen ? t('बाहर (Exit)', 'Exit', 'बाहर') : t('पूर्ण स्क्रीन', 'Full Screen', 'पूर्ण स्क्रीन')}</span>
                 </button>
               </div>
             </div>
@@ -683,7 +693,7 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
                     handleStartPlay();
                     setTimeout(toggleFullscreen, 300);
                   }}
-                  title="Play in Full Screen"
+                  title={t('पूर्ण स्क्रीन में बजाउ (Play in Full Screen)', 'Play in Full Screen', 'पूर्ण स्क्रीन में बजाउ')}
                   style={{
                     background: 'rgba(8, 10, 16, 0.8)',
                     backdropFilter: 'blur(8px)',
@@ -700,7 +710,7 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
                   }}
                 >
                   <Maximize2 size={14} />
-                  <span>Full Screen</span>
+                  <span>{t('पूर्ण स्क्रीन (Full Screen)', 'Full Screen', 'पूर्ण स्क्रीन')}</span>
                 </button>
               </div>
 
@@ -734,8 +744,8 @@ export default function SongHeroVideo({ youtubeId, posterUrl, title, song, initi
                 fontSize: '0.82rem',
                 fontWeight: 500
               }}>
-                <span>बजाउ (Click to Play Video)</span>
-                <span style={{ color: 'var(--neon-saffron)' }}>HD Video • Full Screen</span>
+                <span>{t('बजाउ (Click to Play Video)', 'Click to Play Video', 'भिडियो बजाउ')}</span>
+                <span style={{ color: 'var(--neon-saffron)' }}>{t('HD वीडियो • पूर्ण स्क्रीन', 'HD Video • Full Screen', 'HD भिडियो • पूर्ण स्क्रीन')}</span>
               </div>
             </div>
           )}

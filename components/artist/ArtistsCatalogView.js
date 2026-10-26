@@ -3,8 +3,10 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, Mic, ArrowRight, CheckCircle2, Music, Sparkles, MapPin } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ArtistsCatalogView({ initialArtists = [] }) {
+  const { t, isEnglish } = useLanguage();
   const [search, setSearch] = useState('');
   const [selectedGender, setSelectedGender] = useState('all');
 
@@ -38,7 +40,7 @@ export default function ArtistsCatalogView({ initialArtists = [] }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="गायक / गायिका खोजू (Search artist by name)..."
+            placeholder={t('गायक / गायिका खोजू (Search artist by name)...', 'Search artist by name...', 'गायक / गायिका खोजू...')}
             className="artists-search-input"
           />
           {search && (
@@ -60,19 +62,19 @@ export default function ArtistsCatalogView({ initialArtists = [] }) {
             onClick={() => setSelectedGender('all')}
             className={`artists-gender-pill ${selectedGender === 'all' ? 'active' : ''}`}
           >
-            सभ गायक (All)
+            {t('सभ गायक (All)', 'All Artists', 'सभ गायक')}
           </button>
           <button
             onClick={() => setSelectedGender('female')}
             className={`artists-gender-pill ${selectedGender === 'female' ? 'active' : ''}`}
           >
-            महिला गायिका (Female)
+            {t('महिला गायिका (Female)', 'Female Singers', 'महिला गायिका')}
           </button>
           <button
             onClick={() => setSelectedGender('male')}
             className={`artists-gender-pill ${selectedGender === 'male' ? 'active' : ''}`}
           >
-            पुरुष गायक (Male)
+            {t('पुरुष गायक (Male)', 'Male Singers', 'पुरुष गायक')}
           </button>
         </div>
       </div>
@@ -80,7 +82,7 @@ export default function ArtistsCatalogView({ initialArtists = [] }) {
       {/* Results Count */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-          कुल {filteredArtists.length} गायक उपलब्ध अछि
+          {t(`कुल ${filteredArtists.length} गायक उपलब्ध अछि`, `Showing ${filteredArtists.length} artists`, `कुल ${filteredArtists.length} गायक उपलब्ध`)}
         </span>
       </div>
 
@@ -88,8 +90,10 @@ export default function ArtistsCatalogView({ initialArtists = [] }) {
       <div className="artists-grid-container">
         {filteredArtists.map((artist) => {
           const songsCount = artist.stats?.total_songs || 0;
-          const artistName = artist.name_devanagari || artist.name;
-          const romanName = artist.name_roman || '';
+          const artistName = isEnglish && artist.name_roman
+            ? artist.name_roman
+            : (artist.name_devanagari || artist.name);
+          const romanName = isEnglish ? '' : (artist.name_roman || '');
 
           return (
             <Link
@@ -153,11 +157,11 @@ export default function ArtistsCatalogView({ initialArtists = [] }) {
               <div className="artist-card-footer">
                 <span className="artist-card-count">
                   <Music size={13} color="var(--accent-gold)" />
-                  <span>{songsCount} गीत</span>
+                  <span>{songsCount} {t('गीत', 'tracks', 'गीत')}</span>
                 </span>
 
                 <div className="artist-card-cta">
-                  <span>प्रोफाइल देखू</span>
+                  <span>{t('प्रोफाइल देखू (View Profile)', 'View Profile', 'प्रोफाइल देखू')}</span>
                   <ArrowRight size={14} />
                 </div>
               </div>
@@ -168,7 +172,9 @@ export default function ArtistsCatalogView({ initialArtists = [] }) {
 
       {filteredArtists.length === 0 && (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-          <p style={{ fontSize: '1.1rem', marginBottom: '8px' }}>कोनो गायक नै भेटल</p>
+          <p style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
+            {t('कोनो गायक नै भेटल (No artists found)', 'No artists found matching your query', 'कोनो गायक नहि भेटल')}
+          </p>
           <button
             onClick={() => { setSearch(''); setSelectedGender('all'); }}
             style={{
@@ -180,7 +186,7 @@ export default function ArtistsCatalogView({ initialArtists = [] }) {
               cursor: 'pointer'
             }}
           >
-            फ़िल्टर रीसेट करू
+            {t('फ़िल्टर रीसेट करू (Reset Filters)', 'Reset Filters', 'फ़िल्टर रीसेट करू')}
           </button>
         </div>
       )}

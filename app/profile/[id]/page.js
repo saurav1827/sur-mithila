@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, CheckCircle2, MapPin, Calendar, Share2, Mic,
   Heart, Disc, Sparkles, Music, MessageCircle,
-  Check, Edit3, UserPlus, UserCheck, Radio
+  Check, Edit3, UserPlus, UserCheck, Radio, Lock, Globe, Shield, Loader2
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useLanguage } from '../../../context/LanguageContext';
@@ -29,6 +29,7 @@ export default function CreatorProfilePage() {
   // Follow State (stored in localStorage)
   const [isFollowing, setIsFollowing] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
   useEffect(() => {
     if (!rawId) return;
@@ -117,6 +118,40 @@ export default function CreatorProfilePage() {
     });
   };
 
+  const isAdmin = Boolean(currentUser?.isAdmin || currentUser?.role === 'admin');
+  const canUserManagePrivacy = Boolean(
+    isAdmin || (isSelf && Boolean(currentUser?.canManagePrivacy))
+  );
+  const [isTogglingPrivacy, setIsTogglingPrivacy] = useState(false);
+
+  const handleTogglePrivacy = async () => {
+    if (!profileData?.user?.id) return;
+    const currentPrivacy = Boolean(profileData.user.is_private);
+    const nextPrivacy = !currentPrivacy;
+    setIsTogglingPrivacy(true);
+    try {
+      const res = await fetch(`/api/users/${encodeURIComponent(profileData.user.id)}/privacy`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_private: nextPrivacy }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setProfileData((prev) => ({
+          ...prev,
+          is_private: nextPrivacy,
+          user: { ...prev.user, is_private: nextPrivacy },
+        }));
+      } else {
+        alert(data.error || 'Failed to update privacy');
+      }
+    } catch (err) {
+      console.error('Privacy toggle error:', err);
+    } finally {
+      setIsTogglingPrivacy(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ maxWidth: '860px', margin: '0 auto', minHeight: '80vh', padding: '24px 16px' }}>
@@ -128,6 +163,40 @@ export default function CreatorProfilePage() {
             <div style={{ height: '16px', width: '130px', borderRadius: '4px' }} className="sk" />
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (profileData?.isLocked) {
+    return (
+      <div style={{ maxWidth: '640px', margin: '80px auto', textAlign: 'center', padding: '36px 24px' }}>
+        <div style={{
+          width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(234, 179, 8, 0.1)',
+          border: '1px solid rgba(234, 179, 8, 0.25)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#EAB308'
+        }}>
+          <Lock size={40} />
+        </div>
+        <h2 className="font-traditional" style={{ color: '#F8FAFC', fontSize: '1.6rem', marginBottom: '8px' }}>
+          {t('ई खाता निजी अछि', 'This Account is Private')}
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6', maxWidth: '440px', margin: '0 auto 28px' }}>
+          {t(
+            'ई कलाकार अपन खाता निजी रखने छथि। केवल खाताधारक आ प्रशासक ई प्रोफाइल आ प्रस्तुति देखि सकैत छथि।',
+            'This creator account is private. Only the account owner and administrators can view this profile and their recordings.'
+          )}
+        </p>
+        <Link
+          href="/community"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px',
+            borderRadius: '999px', background: 'linear-gradient(135deg, #EAB308, #CA8A04)',
+            color: '#070913', fontWeight: 700, textDecoration: 'none', fontSize: '0.9rem'
+          }}
+        >
+          <ArrowLeft size={16} />
+          {t('समुदाय पर वापस जाउ', 'Back to Community')}
+        </Link>
       </div>
     );
   }
@@ -169,6 +238,64 @@ export default function CreatorProfilePage() {
 
   return (
     <div style={{ maxWidth: '880px', margin: '0 auto', minHeight: '90vh', padding: '12px 16px 60px' }}>
+      {/* Admin Moderation Bar */}
+      {isAdmin && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 16px', borderRadius: '12px', marginBottom: '14px',
+          background: 'rgba(234, 179, 8, 0.08)', border: '1px solid rgba(234, 179, 8, 0.25)',
+          flexWrap: 'wrap', gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Shield size={18} color="#EAB308" />
+            <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#F8FAFC' }}>
+              {t('प्रशासक नियंत्रण (Admin Control):', 'Administrator Controls:')}{' '}
+              <span style={{ color: profileData.user?.is_private ? '#EF4444' : '#10B981' }}>
+                {profileData.user?.is_private ? t('🔒 निजी प्रोफाइल', '🔒 Private Profile') : t('🌐 सार्वजनिक प्रोफाइल', '🌐 Public Profile')}
+              </span>
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={isTogglingPrivacy}
+            onClick={handleTogglePrivacy}
+            style={{
+              padding: '6px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: profileData.user?.is_private ? '#10B981' : 'rgba(239, 68, 68, 0.15)',
+              color: profileData.user?.is_private ? '#070913' : '#EF4444',
+              fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s ease',
+              display: 'flex', alignItems: 'center', gap: '6px'
+            }}
+          >
+            {profileData.user?.is_private ? <Globe size={14} /> : <Lock size={14} />}
+            {isTogglingPrivacy
+              ? t('प्रक्रिया...', 'Updating...')
+              : profileData.user?.is_private
+                ? t('सार्वजनिक बनाउ', 'Make Public')
+                : t('निजी बनाउ', 'Make Private')
+            }
+          </button>
+        </div>
+      )}
+
+      {/* Private Profile Banner for Owner */}
+      {!isAdmin && isSelf && profileData.user?.is_private && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '10px 16px', borderRadius: '12px', marginBottom: '14px',
+          background: 'rgba(234, 179, 8, 0.08)', border: '1px solid rgba(234, 179, 8, 0.2)',
+          color: '#EAB308', fontSize: '0.86rem', fontWeight: 500
+        }}>
+          <Lock size={16} />
+          <span>
+            {t(
+              'अहाँक खाता निजी अछि। केवल अहाँ आ व्यवस्थापक ई प्रोफाइल आ प्रस्तुति देखि सकैत छथि।',
+              'Your profile is private. Only you and administrators can view this profile and your recordings.'
+            )}
+          </span>
+        </div>
+      )}
+
       {/* 1. Sticky Navigation Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '18px', padding: '12px 0',
@@ -309,28 +436,57 @@ export default function CreatorProfilePage() {
               <Share2 size={16} />
             </button>
 
-            {/* If Self: Edit Profile Button. If Other: Follow Button & Sing CTA */}
+            {/* If Self: Edit Profile Button & Privacy Toggle. If Other: Follow Button & Sing CTA */}
             {isSelf ? (
-              <Link
-                href="/profile?tab=details"
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: '999px',
-                  border: '1px solid rgba(234, 179, 8, 0.35)',
-                  background: 'rgba(234, 179, 8, 0.1)',
-                  color: '#FDE047',
-                  fontWeight: 700,
-                  fontSize: '0.88rem',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'background 0.2s ease',
-                }}
-              >
-                <Edit3 size={14} />
-                <span>{t('प्रोफाइल सम्पादन', 'Edit Profile')}</span>
-              </Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <Link
+                  href="/profile?tab=details"
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '999px',
+                    border: '1px solid rgba(234, 179, 8, 0.35)',
+                    background: 'rgba(234, 179, 8, 0.1)',
+                    color: '#FDE047',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'background 0.2s ease',
+                  }}
+                >
+                  <Edit3 size={14} />
+                  <span>{t('प्रोफाइल सम्पादन', 'Edit Profile')}</span>
+                </Link>
+
+                {canUserManagePrivacy && (
+                  <button
+                    type="button"
+                    onClick={() => setPrivacyModalOpen(true)}
+                    style={{
+                      padding: '8px 18px',
+                      borderRadius: '999px',
+                      border: '1px solid',
+                      borderColor: profileData.user?.is_private ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)',
+                      background: profileData.user?.is_private ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                      color: profileData.user?.is_private ? '#34D399' : '#F87171',
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {profileData.user?.is_private ? <Globe size={14} /> : <Lock size={14} />}
+                    <span>
+                      {profileData.user?.is_private ? t('सार्वजनिक बनाउ', 'Make Public') : t('निजी बनाउ', 'Make Private')}
+                    </span>
+                  </button>
+                )}
+              </div>
             ) : (
               <>
                 <button
@@ -684,6 +840,144 @@ export default function CreatorProfilePage() {
             <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{t('कुल प्रस्तुति (Total Covers)', 'Total Covers')}</div>
               <div style={{ color: '#EAB308', fontWeight: 700, fontSize: '0.9rem' }}>{recordings.length}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Privacy Modal for Profile Owner */}
+      {privacyModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(0, 0, 0, 0.78)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={() => !isTogglingPrivacy && setPrivacyModalOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '460px',
+              width: '100%',
+              borderRadius: '20px',
+              background: '#0B0E1A',
+              border: '1px solid rgba(234, 179, 8, 0.3)',
+              padding: '28px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(234, 179, 8, 0.12)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              animation: 'fadeIn 0.2s ease-out',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '52px',
+                height: '52px',
+                borderRadius: '50%',
+                background: profileData.user?.is_private ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid',
+                borderColor: profileData.user?.is_private ? '#10B981' : '#EF4444',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: profileData.user?.is_private ? '#10B981' : '#EF4444',
+                flexShrink: 0,
+              }}>
+                {profileData.user?.is_private ? <Globe size={26} /> : <Lock size={26} />}
+              </div>
+              <div>
+                <h3 className="font-traditional" style={{ fontSize: '1.3rem', color: '#F8FAFC', margin: 0 }}>
+                  {profileData.user?.is_private
+                    ? t('खाता सार्वजनिक बनाउ', 'Make Profile Public')
+                    : t('खाता निजी बनाउ', 'Make Profile Private')}
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  {t('गोपनीयता सेटिंग (Privacy Settings)', 'Privacy Configuration')}
+                </span>
+              </div>
+            </div>
+
+            <div style={{
+              padding: '16px',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              fontSize: '0.88rem',
+              lineHeight: 1.6,
+              color: 'var(--text-secondary)',
+            }}>
+              {profileData.user?.is_private ? (
+                <p style={{ margin: 0 }}>
+                  {t(
+                    'सार्वजनिक केला उत्तर अहाँक प्रोफाइल, नाम, आ समस्त सार्वजनिक प्रस्तुति सुर-मिथिला समुदाय आ खोज मे सभक लेल दृश्यमान भ\' जाएत।',
+                    'Once made public, your profile and public recordings will be visible to everyone across the Sur Mithila community and search.'
+                  )}
+                </p>
+              ) : (
+                <p style={{ margin: 0 }}>
+                  {t(
+                    'निजी केला उत्तर अहाँक प्रोफाइल आ समस्त प्रस्तुति केवल अहाँ आ व्यवस्थापक के देखबामे आएत। अन्य कोनो व्यक्ति अहाँक प्रोफाइल नहि देखि सकत।',
+                    'Once made private, your profile and recordings will ONLY be visible to you and administrators. Other visitors will see a locked account notice.'
+                  )}
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '4px' }}>
+              <button
+                type="button"
+                disabled={isTogglingPrivacy}
+                onClick={() => setPrivacyModalOpen(false)}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#FAFAFA',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('रद्द करू', 'Cancel')}
+              </button>
+
+              <button
+                type="button"
+                disabled={isTogglingPrivacy}
+                onClick={async () => {
+                  await handleTogglePrivacy();
+                  setPrivacyModalOpen(false);
+                }}
+                style={{
+                  padding: '10px 22px',
+                  borderRadius: '10px',
+                  background: profileData.user?.is_private
+                    ? 'linear-gradient(135deg, #10B981, #059669)'
+                    : 'linear-gradient(135deg, #EAB308, #CA8A04)',
+                  border: 'none',
+                  color: '#070913',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  cursor: isTogglingPrivacy ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                {isTogglingPrivacy && <Loader2 size={16} className="animate-spin" />}
+                {profileData.user?.is_private
+                  ? t('हँ, सार्वजनिक करू', 'Yes, Make Public')
+                  : t('हँ, निजी बनाउ', 'Yes, Make Private')}
+              </button>
             </div>
           </div>
         </div>

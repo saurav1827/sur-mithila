@@ -7,20 +7,7 @@ import { Bell, Heart, MessageSquare, AtSign, Check, X, Sparkles, ExternalLink, T
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
-function formatRelativeTime(dateString) {
-  if (!dateString) return '';
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffSec = Math.floor((now - date) / 1000);
 
-  if (diffSec < 60) return 'आबहि (Just now)';
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin} मि. पहिने`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour} घंटा पहिने`;
-  const diffDay = Math.floor(diffHour / 24);
-  return `${diffDay} दिन पहिने`;
-}
 
 export default function NotificationBell() {
   const { user, openSignIn } = useAuth();
@@ -46,7 +33,7 @@ export default function NotificationBell() {
     return () => clearInterval(interval);
   }, [user]);
 
-  // Click outside to close
+  // Click outside or press Escape to close
   useEffect(() => {
     if (!open) return;
     const handleClickOutside = (e) => {
@@ -54,8 +41,19 @@ export default function NotificationBell() {
         setOpen(false);
       }
     };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open]);
 
   const fetchNotifications = async () => {
@@ -177,23 +175,39 @@ export default function NotificationBell() {
     return <Bell size={14} color="#EAB308" />;
   };
 
+  const formatRelativeTime = (dateString) => {
+    if (!dateString) return '';
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffSec = Math.floor((now - date) / 1000);
+
+    if (diffSec < 60) return t('आबहि (Just now)', 'Just now', 'आबहि');
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return t(`${diffMin} मि. पहिने`, `${diffMin}m ago`, `${diffMin} मि. पहिने`);
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return t(`${diffHour} घंटा पहिने`, `${diffHour}h ago`, `${diffHour} घंटा पहिने`);
+    const diffDay = Math.floor(diffHour / 24);
+    return t(`${diffDay} दिन पहिने`, `${diffDay}d ago`, `${diffDay} दिन पहिने`);
+  };
+
   const renderDescription = (notif) => {
     const rawTitle = notif.resourceTitle ? notif.resourceTitle.trim() : '';
-    const titleTag = rawTitle ? `'${rawTitle}'` : 'गान';
+    const defaultTag = t('गान', 'song', 'गान');
+    const titleTag = rawTitle ? `'${rawTitle}'` : defaultTag;
 
     if (notif.type === 'recording_like') {
-      return `अहाँक गान ${titleTag} पर लाइक कएलनि`;
+      return t(`अहाँक गान ${titleTag} पर लाइक कएलनि`, `liked your song ${titleTag}`, `अहाँक गान ${titleTag} पसंद कएलनि`);
     }
     if (notif.type === 'recording_comment' || notif.type === 'post_reply') {
-      return `अहाँक गान ${titleTag} पर टिप्पणी कएलनि`;
+      return t(`अहाँक गान ${titleTag} पर टिप्पणी कएलनि`, `commented on your song ${titleTag}`, `अहाँक गान ${titleTag} पर टिप्पणी कएलनि`);
     }
     if (notif.type === 'comment_reply') {
-      return `अहाँक टिप्पणीक उत्तर देलनि`;
+      return t('अहाँक टिप्पणीक उत्तर देलनि', 'replied to your comment', 'अहाँक टिप्पणीक उत्तर देलनि');
     }
     if (notif.type === 'mention') {
-      return `अहाँक एक टिप्पणी में उल्लेख (@mention) कएलनि`;
+      return t('अहाँक एक टिप्पणी में उल्लेख (@mention) कएलनि', 'mentioned you in a comment', 'अहाँक एक टिप्पणी में उल्लेख कएलनि');
     }
-    return `अहाँक पोस्ट संग जुड़ल गतिविधि`;
+    return t('अहाँक पोस्ट संग जुड़ल गतिविधि', 'activity on your post', 'अहाँक पोस्टक गतिविधि');
   };
 
   return (
@@ -203,8 +217,8 @@ export default function NotificationBell() {
         type="button"
         onClick={handleToggle}
         className="nav-notification-bell-btn"
-        aria-label="Notifications"
-        title={unreadCount > 0 ? `${unreadCount} नव सूचना (Notifications)` : 'सूचना (Notifications)'}
+        aria-label={t('सूचना', 'Notifications', 'सूचना')}
+        title={unreadCount > 0 ? t(`${unreadCount} नव सूचना (Notifications)`, `${unreadCount} new notifications`, `${unreadCount} नव सूचना`) : t('सूचना (Notifications)', 'Notifications', 'सूचना')}
       >
         <Bell size={20} color={unreadCount > 0 ? '#EAB308' : '#FAFAFA'} />
         {unreadCount > 0 && (
@@ -216,107 +230,144 @@ export default function NotificationBell() {
 
       {/* Notifications Dropdown Panel */}
       {open && (
-        <div className="nav-notification-dropdown" role="dialog" aria-label="Notifications Panel">
-          {/* Header */}
-          <div className="nav-notif-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Bell size={16} color="#EAB308" />
-              <h3 className="font-traditional" style={{ fontSize: '1rem', color: '#F8FAFC', margin: 0, fontWeight: 700 }}>
-                {t('सूचना मंजूषा', 'Notifications')}
-              </h3>
-              {unreadCount > 0 && (
-                <span className="nav-notif-header-count">
-                  {unreadCount} नव
-                </span>
-              )}
-            </div>
+        <>
+          {/* Mobile backdrop scrim */}
+          <div
+            className="nav-notif-backdrop"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {unreadCount > 0 && (
-                <button
-                  type="button"
-                  onClick={markAllAsRead}
-                  className="nav-notif-mark-btn"
-                  title="Mark all as read"
-                >
-                  <Check size={12} />
-                  <span>सभ पढ़ल मानू</span>
-                </button>
-              )}
-
-              {notifications.length > 0 && (
-                <button
-                  type="button"
-                  onClick={clearAllNotifications}
-                  className="nav-notif-clear-btn"
-                  title="Clear all notifications"
-                >
-                  <Trash2 size={12} />
-                  <span>सभ मेटाउ</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* List */}
-          <div className="nav-notif-body">
-            {notifications.length === 0 ? (
-              <div className="nav-notif-empty">
-                <div className="nav-notif-empty-icon">
-                  <Sparkles size={24} color="#EAB308" />
+          <div
+            className="nav-notification-dropdown"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('सूचना मंजूषा', 'Notifications Panel')}
+          >
+            {/* Header */}
+            <div className="nav-notif-header">
+              <div className="nav-notif-title-group">
+                <div className="nav-notif-icon-badge">
+                  <Bell size={16} color="#EAB308" />
                 </div>
-                <p className="font-traditional" style={{ margin: '0 0 4px', color: '#F8FAFC', fontWeight: 600 }}>
-                  कोनो नव सूचना नहि अछि
-                </p>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  लाइक्स, टिप्पणियाँ आ मेंशनक सूचना एतय देखाइत।
-                </span>
+                <h3 className="nav-notif-title font-traditional">
+                  {t('सूचना मंजूषा', 'Notifications')}
+                </h3>
+                {unreadCount > 0 && (
+                  <span className="nav-notif-header-count">
+                    {unreadCount} {t('नव', 'new')}
+                  </span>
+                )}
               </div>
-            ) : (
-              notifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  onClick={() => handleItemClick(notif)}
-                  className={`nav-notif-item ${!notif.isRead ? 'unread' : ''}`}
-                >
-                  <div className="nav-notif-item-left">
-                    <div className="nav-notif-avatar-box">
-                      {notif.actorAvatar ? (
-                        <img src={notif.actorAvatar} alt={notif.actorName} className="nav-notif-avatar" />
-                      ) : (
-                        <div className="nav-notif-avatar-fallback">
-                          {notif.actorName?.charAt(0) || 'U'}
-                        </div>
-                      )}
-                      <span className="nav-notif-type-icon">
-                        {renderIcon(notif.type)}
-                      </span>
-                    </div>
 
-                    <div className="nav-notif-content">
-                      <p className="nav-notif-text">
-                        <strong style={{ color: '#F8FAFC' }}>{notif.actorName}</strong>{' '}
-                        <span>{renderDescription(notif)}</span>
-                      </p>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="nav-notif-close-btn"
+                aria-label={t('बंद करू', 'Close')}
+                title={t('बंद करू', 'Close')}
+              >
+                <X size={16} />
+              </button>
+            </div>
 
-                      {notif.textPreview && (
-                        <p className="nav-notif-preview">
-                          "{notif.textPreview}"
-                        </p>
-                      )}
+            {/* Quick Action Toolbar (only if notifications exist) */}
+            {notifications.length > 0 && (
+              <div className="nav-notif-toolbar">
+                <span className="nav-notif-toolbar-summary">
+                  {unreadCount > 0
+                    ? `${unreadCount} ${t('बिना पढ़ल', 'unread')}`
+                    : t('सभ पढ़ल मानल गेल', 'All caught up')}
+                </span>
 
-                      <span className="nav-notif-time">
-                        {formatRelativeTime(notif.createdAt)}
-                      </span>
-                    </div>
-                  </div>
+                <div className="nav-notif-toolbar-actions">
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={markAllAsRead}
+                      className="nav-notif-toolbar-btn mark-read"
+                      title={t('सभ पढ़ल मानू', 'Mark all as read')}
+                    >
+                      <Check size={12} strokeWidth={2.5} />
+                      <span>{t('सभ पढ़ल मानू', 'Mark read')}</span>
+                    </button>
+                  )}
 
-                  {!notif.isRead && <span className="nav-notif-unread-dot" />}
+                  <button
+                    type="button"
+                    onClick={clearAllNotifications}
+                    className="nav-notif-toolbar-btn clear-all"
+                    title={t('सभ मेटाउ', 'Clear all notifications')}
+                  >
+                    <Trash2 size={12} />
+                    <span>{t('सभ मेटाउ', 'Clear all')}</span>
+                  </button>
                 </div>
-              ))
+              </div>
             )}
+
+            {/* List */}
+            <div className="nav-notif-body">
+              {notifications.length === 0 ? (
+                <div className="nav-notif-empty">
+                  <div className="nav-notif-empty-icon">
+                    <Sparkles size={24} color="#EAB308" />
+                  </div>
+                  <p className="font-traditional" style={{ margin: '0 0 6px', color: '#F8FAFC', fontWeight: 600, fontSize: '0.95rem' }}>
+                    {t('कोनो नव सूचना नहि अछि', 'No new notifications')}
+                  </p>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4, maxWidth: '260px', display: 'inline-block' }}>
+                    {t('लाइक्स, टिप्पणियाँ आ मेंशनक सूचना एतय देखाइत।', 'Likes, comments, and mentions will appear here.')}
+                  </span>
+                </div>
+              ) : (
+                notifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    onClick={() => handleItemClick(notif)}
+                    className={`nav-notif-item ${!notif.isRead ? 'unread' : ''}`}
+                  >
+                    <div className="nav-notif-item-left">
+                      <div className="nav-notif-avatar-box">
+                        {notif.actorAvatar ? (
+                          <img src={notif.actorAvatar} alt={notif.actorName} className="nav-notif-avatar" />
+                        ) : (
+                          <div className="nav-notif-avatar-fallback">
+                            {notif.actorName?.charAt(0) || 'U'}
+                          </div>
+                        )}
+                        <span className="nav-notif-type-icon">
+                          {renderIcon(notif.type)}
+                        </span>
+                      </div>
+
+                      <div className="nav-notif-content">
+                        <p className="nav-notif-text">
+                          <strong className="nav-notif-actor">{notif.actorName}</strong>{' '}
+                          <span className="nav-notif-desc">{renderDescription(notif)}</span>
+                        </p>
+
+                        {notif.textPreview && (
+                          <p className="nav-notif-preview">
+                            "{notif.textPreview}"
+                          </p>
+                        )}
+
+                        <span className="nav-notif-time">
+                          {formatRelativeTime(notif.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {!notif.isRead && (
+                      <span className="nav-notif-unread-dot" title={t('बिना पढ़ल', 'Unread')} />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

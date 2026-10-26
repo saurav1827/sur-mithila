@@ -31,7 +31,11 @@ export default function Sidebar({ stats, categories = [] }) {
                     <>
                         <div className="nav-group"><TranslatedText maithili="श्रेणी" english="Categories" /></div>
                         {validCategories.map((c) => {
-                            const isSelected = pathname === '/' && (cat === c.value || cat === c.name);
+                            const isSelected = pathname === '/' && (
+                                cat === c.value ||
+                                cat === c.name ||
+                                (cat !== 'all' && (cat.includes(c.value) || c.value.includes(cat) || c.name.includes(cat)))
+                            );
                             return (
                                 <Link
                                     key={c.name}

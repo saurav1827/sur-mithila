@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Music, Search, Disc, Shield, Radio, Sparkles, User, Settings, LogOut, LogIn, Clock, Menu, X, Mic, Bookmark, Globe } from 'lucide-react';
+import { Music, Search, Disc, Shield, Radio, Sparkles, User, Settings, LogOut, LogIn, Clock, Menu, X, Mic, Bookmark, Globe, Check } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -13,6 +13,212 @@ const menuItem = {
   borderRadius: '8px', fontSize: '0.88rem', fontWeight: 500, color: 'var(--text-main)',
   background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', textDecoration: 'none',
 };
+
+function LanguageSelector() {
+  const { language, setLanguage, t, LANGUAGES } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const currentLang = LANGUAGES?.find((l) => l.id === language) || LANGUAGES?.[0] || { shortLabel: 'मैथिली' };
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t('भाषा बदलो', 'Change Language')}
+        title={t('भाषा चयन (Language Selection)', 'Language Selection', 'भाषा चयन')}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+          padding: '6px 10px',
+          borderRadius: '9999px',
+          background: open ? 'rgba(234, 179, 8, 0.16)' : 'rgba(255, 255, 255, 0.05)',
+          border: `1px solid ${open ? 'rgba(234, 179, 8, 0.45)' : 'rgba(255, 255, 255, 0.1)'}`,
+          color: open ? '#FDE047' : 'var(--text-secondary)',
+          fontSize: '0.78rem',
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'all 0.18s ease',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = 'rgba(234, 179, 8, 0.4)';
+          e.currentTarget.style.color = '#FAFAFA';
+        }}
+        onMouseLeave={(e) => {
+          if (!open) {
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.color = 'var(--text-secondary)';
+          }
+        }}
+      >
+        <Globe size={13} color="#EAB308" />
+        <span>{currentLang.shortLabel}</span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          aria-label={t('भाषा चयन', 'Select Language')}
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: 'calc(100% + 10px)',
+            width: '270px',
+            padding: '8px',
+            zIndex: 65,
+            background: 'rgba(10, 12, 18, 0.96)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(234, 179, 8, 0.28)',
+            borderRadius: '16px',
+            boxShadow: '0 20px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(234, 179, 8, 0.08)',
+          }}
+        >
+          <div
+            style={{
+              padding: '6px 10px 8px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              marginBottom: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#EAB308',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {t('भाषा चयन (Language)', 'Language', 'भाषा चयन')}
+            </span>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+              {language === 'english' ? 'Global' : language === 'maithili_plus' ? 'शुद्ध' : 'द्विभाषी'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {LANGUAGES.map((item) => {
+              const isSelected = language === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={isSelected}
+                  onClick={() => {
+                    setLanguage(item.id);
+                    setOpen(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '10px',
+                    background: isSelected ? 'rgba(234, 179, 8, 0.12)' : 'transparent',
+                    border: isSelected ? '1px solid rgba(234, 179, 8, 0.35)' : '1px solid transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                      <span
+                        style={{
+                          fontSize: '0.85rem',
+                          fontWeight: isSelected ? 700 : 500,
+                          color: isSelected ? '#FDE047' : '#FAFAFA',
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.62rem',
+                          padding: '1px 5px',
+                          borderRadius: '999px',
+                          fontWeight: 700,
+                          background: isSelected ? 'rgba(234, 179, 8, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                          color: isSelected ? '#FDE047' : 'var(--text-muted)',
+                        }}
+                      >
+                        {item.badge}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: '0.7rem',
+                        color: 'var(--text-muted)',
+                        margin: 0,
+                        lineHeight: 1.25,
+                      }}
+                    >
+                      {item.description}
+                    </p>
+                  </div>
+                  {isSelected && (
+                    <div
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '50%',
+                        background: '#EAB308',
+                        color: '#070913',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        marginTop: '2px',
+                      }}
+                    >
+                      <Check size={11} strokeWidth={3} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AccountMenu() {
   const { user, isLoaded, logout, openSignIn } = useAuth();
@@ -50,7 +256,7 @@ function AccountMenu() {
         onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
       >
         <LogIn size={16} />
-        {t('लॉगिन', 'Sign In')}
+        {t('लॉगिन', 'Sign In', 'प्रवेश')}
       </button>
     );
   }
@@ -79,10 +285,10 @@ function AccountMenu() {
             boxShadow: '0 0 12px rgba(234, 179, 8, 0.15)',
             transition: 'all 0.2s ease',
           }}
-          title={t('प्रशासन कक्ष', 'Admin Dashboard')}
+          title={t('प्रशासन कक्ष', 'Admin Dashboard', 'प्रशासन कक्ष')}
         >
           <Shield size={14} color="#EAB308" />
-          <span>{t('प्रशासन', 'Admin')}</span>
+          <span>{t('प्रशासन', 'Admin', 'प्रशासन')}</span>
         </Link>
       )}
 
@@ -94,7 +300,7 @@ function AccountMenu() {
           onMouseLeave={() => setHover(false)}
           aria-haspopup="menu"
           aria-expanded={open}
-          aria-label={t('खाता मेनू', 'Account menu')}
+          aria-label={t('खाता मेनू', 'Account menu', 'खाता सूची')}
           style={{
             padding: '2px', borderRadius: '50%', cursor: 'pointer', background: 'transparent', display: 'flex',
             border: `2px solid ${isAdmin ? '#EAB308' : (ring ? '#EAB308' : 'transparent')}`,
@@ -150,17 +356,17 @@ function AccountMenu() {
             </div>
 
             <Link href="/profile" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
-              <User size={16} color="var(--text-secondary)" /> {t('प्रोफाइल', 'Profile')}
+              <User size={16} color="var(--text-secondary)" /> {t('प्रोफाइल', 'Profile', 'प्रोफाइल')}
             </Link>
             <Link href="/profile?tab=history" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
-              <Clock size={16} color="var(--text-secondary)" /> {t('श्रवण इतिहास', 'Watch History')}
+              <Clock size={16} color="var(--text-secondary)" /> {t('श्रवण इतिहास', 'Watch History', 'श्रवण इतिहास')}
             </Link>
             <Link href="/profile?tab=settings" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
-              <Settings size={16} color="var(--text-secondary)" /> {t('सेटिंग्स', 'Settings')}
+              <Settings size={16} color="var(--text-secondary)" /> {t('सेटिंग्स', 'Settings', 'विन्यास')}
             </Link>
             {isAdmin && (
               <Link href="/admin" role="menuitem" className="nav-menu-item" style={{ ...menuItem, color: '#EAB308' }} onClick={() => setOpen(false)}>
-                <Shield size={16} color="#EAB308" /> {t('प्रशासन', 'Admin')}
+                <Shield size={16} color="#EAB308" /> {t('प्रशासन', 'Admin', 'प्रशासन')}
               </Link>
             )}
             <button
@@ -169,7 +375,7 @@ function AccountMenu() {
               style={{ ...menuItem, color: '#EF4444', marginTop: '4px' }}
               onClick={() => { setOpen(false); logout(); }}
             >
-              <LogOut size={16} color="#EF4444" /> {t('लॉगआउट', 'Log Out')}
+              <LogOut size={16} color="#EF4444" /> {t('लॉगआउट', 'Log Out', 'प्रस्थान')}
             </button>
           </div>
         )}
@@ -200,13 +406,13 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   const navLinks = [
-    { href: '/', labelMaithili: 'गीत संग्रह', labelEnglish: 'Explore', icon: Music },
-    { href: '/categories', labelMaithili: 'संस्कार एवं विधा', labelEnglish: 'Categories', icon: Disc },
-    { href: '/artists', labelMaithili: 'गायक', labelEnglish: 'Artists', icon: Mic },
-    { href: '/playlists', labelMaithili: 'प्लेलिस्ट', labelEnglish: 'Playlists', icon: Sparkles },
-    { href: '/community', labelMaithili: 'समुदाय (गाउ)', labelEnglish: 'Community', icon: Radio, isCommunity: true },
+    { href: '/', labelMaithili: 'गीत संग्रह', labelEnglish: 'Explore', labelPure: 'गीत संग्रह', icon: Music },
+    { href: '/categories', labelMaithili: 'संस्कार एवं विधा', labelEnglish: 'Categories', labelPure: 'संस्कार एवं विधा', icon: Disc },
+    { href: '/artists', labelMaithili: 'गायक', labelEnglish: 'Artists', labelPure: 'गायक', icon: Mic },
+    { href: '/playlists', labelMaithili: 'प्लेलिस्ट', labelEnglish: 'Playlists', labelPure: 'संगीत-तालिका', icon: Sparkles },
+    { href: '/community', labelMaithili: 'समुदाय (गाउ)', labelEnglish: 'Community', labelPure: 'मिथिला चौपाल', icon: Radio, isCommunity: true },
     ...(user?.role === 'admin'
-      ? [{ href: '/admin', labelMaithili: 'प्रशासन', labelEnglish: 'Admin', icon: Shield, isAdmin: true }]
+      ? [{ href: '/admin', labelMaithili: 'प्रशासन', labelEnglish: 'Admin', labelPure: 'प्रशासन', icon: Shield, isAdmin: true }]
       : [])
   ];
 
@@ -333,19 +539,6 @@ export default function Navbar() {
           justify-content: space-between;
           gap: 10px;
         }
-        .mobile-nav-lang-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 7px 14px;
-          border-radius: 999px;
-          background: rgba(234, 179, 8, 0.12);
-          border: 1px solid rgba(234, 179, 8, 0.3);
-          color: #EAB308;
-          font-size: 0.8rem;
-          font-weight: 600;
-          cursor: pointer;
-        }
       `}</style>
 
       <div className="glass-nav-header" style={{
@@ -381,14 +574,15 @@ export default function Navbar() {
                 <span style={{ display: 'inline-flex', alignItems: 'center' }} suppressHydrationWarning>
                   {link.icon && <link.icon size={15} color={isGold ? '#EAB308' : (isActive ? '#EAB308' : 'currentColor')} />}
                 </span>
-                <span>{t(link.labelMaithili, link.labelEnglish)}</span>
+                <span>{t(link.labelMaithili, link.labelEnglish, link.labelPure)}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Right side: Notification Bell & Account */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Right side: Language Selector, Notification Bell & Account */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <LanguageSelector />
           <NotificationBell />
           <AccountMenu />
         </div>
@@ -409,7 +603,7 @@ export default function Navbar() {
             <span className="nav-community-dot" />
           </span>
           <Radio size={14} className="nav-community-icon" />
-          <span className="nav-community-label">{t('समुदाय (गाउ)', 'Community')}</span>
+          <span className="nav-community-label">{t('समुदाय (गाउ)', 'Community', 'मिथिला चौपाल')}</span>
         </Link>
 
         {!pathname.startsWith('/search') && (
@@ -423,7 +617,7 @@ export default function Navbar() {
             }}
           >
             <Search size={14} color="var(--accent-gold)" />
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('गीत खोजू...', 'Search songs...')}</span>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('गीत खोजू...', 'Search songs...', 'गीत खोजू...')}</span>
           </Link>
         )}
       </div>

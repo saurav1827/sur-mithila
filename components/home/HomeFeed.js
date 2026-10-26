@@ -65,6 +65,8 @@ export default function HomeFeed({ initialRows, initialCursor, category }) {
 
 
 
+    const totalSongs = rows.reduce((acc, r) => acc + (r.songs?.length || 0), 0);
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
             {category === 'all' && <AIFeedSection />}
@@ -83,22 +85,32 @@ export default function HomeFeed({ initialRows, initialCursor, category }) {
 
             {status === 'error' && (
                 <div className="feed-end">
-                    <TranslatedText maithili="लोड नहि भेल।" english="Couldn't load more." />{' '}
+                    <TranslatedText maithili="लोड नहि भेल।" english="Couldn't load more." pure="लोड नहि भेल।" />{' '}
                     <button className="btn-ghost" onClick={() => { setStatus('idle'); loadMore(); }}>
-                        <TranslatedText maithili="फेर प्रयास करू" english="Try again" />
+                        <TranslatedText maithili="फेर प्रयास करू" english="Try again" pure="फेर प्रयास करू" />
                     </button>
                 </div>
             )}
 
-            {cursor != null ? <div ref={sentinel} style={{ height: 1 }} /> : (
+            {cursor != null && <div ref={sentinel} style={{ height: 1 }} />}
+
+            {cursor == null && totalSongs > 0 && (
                 <div className="feed-end">
-                    <TranslatedText maithili="आब सभ देखि लेलहुँ। बामा दिस सँ श्रेणी चुनू।" english="You've seen it all. Pick a category from the sidebar." />
+                    <TranslatedText
+                        maithili="आब सभ देखि लेलहुँ। आन श्रेणी चुनू।"
+                        pure="आब सभ देखि लेलहुँ। आन श्रेणी चुनू।"
+                        english="You've seen all songs here. Explore other categories."
+                    />
                 </div>
             )}
 
-            {rows.length === 0 && status !== 'loading' && (
+            {totalSongs === 0 && status !== 'loading' && (
                 <div className="feed-end">
-                    <TranslatedText maithili="एहि श्रेणी मे एखन गीत नहि अछि।" english="No songs in this category yet." />
+                    <TranslatedText
+                        maithili="एहि श्रेणी मे एखन गीत नहि भेटल।"
+                        pure="एहि श्रेणी मे एखन गीत नहि भेटल।"
+                        english="No songs found in this category yet."
+                    />
                 </div>
             )}
         </div>

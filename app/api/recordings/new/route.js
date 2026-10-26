@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDatabase } from '../../../../lib/mongodb';
+import { isPrivacyFeatureAllowed } from '../../../../lib/privacy';
 
 export async function POST(req) {
   try {
@@ -15,7 +16,7 @@ export async function POST(req) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { songId, songSlug, audioUrl, title, caption, duration, isMixed } = body;
+    const { songId, songSlug, audioUrl, title, caption, duration, isMixed, isPrivate, is_private } = body;
 
     if (!songSlug || !audioUrl) {
       return NextResponse.json({ error: 'Missing required recording fields' }, { status: 400 });
@@ -74,6 +75,12 @@ export async function POST(req) {
 
     const recordingCol = db.collection('community_recordings');
 
+    const userEmail = me?.email || '';
+    const userRole = me?.role || 'user';
+    const canManagePrivacy = isPrivacyFeatureAllowed(userEmail, userRole);
+    const requestedPrivate = Boolean(isPrivate ?? is_private);
+    const recordingIsPrivate = Boolean(me?.is_private || (canManagePrivacy && requestedPrivate));
+
     const newRecording = {
       recording_id: 'rec_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
       song_id: originalSong?.id || songId || null,
@@ -90,6 +97,7 @@ export async function POST(req) {
       is_mixed: Boolean(isMixed),
       likes: 0,
       comments: [],
+      is_private: recordingIsPrivate,
       created_at: new Date().toISOString(),
       status: 'published',
     };

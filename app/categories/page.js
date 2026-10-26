@@ -8,6 +8,7 @@ import {
   ChevronLeft, ChevronRight, Check, Filter, Play, Music2
 } from 'lucide-react';
 import SongCard from '../../components/SongCard';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Authentic Cultural Collections with curated Maithili metadata
 const CULTURAL_GROUPS = [
@@ -180,7 +181,30 @@ const ALL_CAT_INDEX = [
   { name: 'झिझिया लोकनृत्य', count: 13 }
 ];
 
+function getLocalizedCategoryTitle(rawTitle, language, t) {
+  if (!rawTitle) return '';
+  if (language === 'english') {
+    const match = rawTitle.match(/\(([^)]+)\)/);
+    if (match && match[1]) {
+      return match[1].replace(/-\s*Farewell/, '').trim();
+    }
+    if (rawTitle.includes('भगवती')) return 'Bhagwati Vandana & Sacred Hymns';
+    if (rawTitle.includes('नचारी')) return 'Shiva Nachari & Maheshvani';
+    if (rawTitle.includes('राम')) return 'Ram-Janaki Vivah Songs';
+    if (rawTitle.includes('कृष्ण')) return 'Krishna Leela & Padavali';
+    if (rawTitle.includes('विद्यापति')) return 'Vidyapati Padavali';
+    if (rawTitle.includes('सलहेस')) return 'King Salhesh Epic';
+    if (rawTitle.includes('लोकगीत')) return 'Traditional Folk Songs';
+    return rawTitle;
+  }
+  if (language === 'maithili_plus') {
+    return t(rawTitle, null);
+  }
+  return rawTitle;
+}
+
 function CategoryPageContent() {
+  const { language, t, isEnglish, isMaithiliPlus } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -284,17 +308,17 @@ function CategoryPageContent() {
       const found = group.categories.find(c => c.keyword === catKey || c.title.includes(catKey));
       if (found) {
         return {
-          title: found.title,
-          desc: found.desc,
-          badge: group.badge,
+          title: getLocalizedCategoryTitle(found.title, language, t),
+          desc: isEnglish ? 'Sacred and folk musical heritage of Mithila.' : (isMaithiliPlus ? t(found.desc) : found.desc),
+          badge: isEnglish ? 'Sacred Tradition' : (isMaithiliPlus ? t(group.badge) : group.badge),
           accentColor: group.accentColor
         };
       }
     }
     return {
-      title: catKey,
-      desc: 'मिथिलाक समृद्ध संगीत परंपरा आ लोक सांस्कृतिक धरोहर।',
-      badge: 'सांस्कृतिक विधा',
+      title: getLocalizedCategoryTitle(catKey, language, t),
+      desc: isEnglish ? 'Rich musical tradition and cultural heritage of Mithila.' : 'मिथिलाक समृद्ध संगीत परंपरा आ लोक सांस्कृतिक धरोहर।',
+      badge: isEnglish ? 'Musical Category' : 'सांस्कृतिक विधा',
       accentColor: '#EAB308'
     };
   };
@@ -311,7 +335,7 @@ function CategoryPageContent() {
         <div>
           <button onClick={handleBackToHub} className="category-back-btn">
             <ArrowLeft size={16} />
-            <span>सभ विधा (All Categories)</span>
+            <span>{t('सभ विधा (All Categories)', 'All Categories', 'सभ विधा')}</span>
           </button>
         </div>
 
@@ -337,7 +361,7 @@ function CategoryPageContent() {
               <span className="stat-value font-traditional" style={{ color: details.accentColor }}>
                 {totalSongs}
               </span>
-              <span className="stat-label">गीत उपलब्ध</span>
+              <span className="stat-label">{t('गीत उपलब्ध', 'tracks available', 'गीत उपलब्ध')}</span>
             </div>
           </div>
         </div>
@@ -351,14 +375,14 @@ function CategoryPageContent() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`"${details.title.split(' ')[0]}" में गीत, गायक या रचनाकार खोजू...`}
+              placeholder={isEnglish ? `Search songs, singers or writers in "${details.title}"...` : `"${details.title.split(' ')[0]}" में गीत, गायक या रचनाकार खोजू...`}
               className="category-search-input"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
                 className="category-search-clear"
-                title="हटाउ"
+                title={t('हटाउ', 'Clear', 'हटाउ')}
               >
                 <X size={15} />
               </button>
@@ -371,21 +395,21 @@ function CategoryPageContent() {
               onClick={() => handleSortChange('popular')}
               className={`category-pill-btn ${activeSort === 'popular' ? 'active' : ''}`}
             >
-              सर्वाधिक लोकप्रिय (Popular)
+              {t('सर्वाधिक लोकप्रिय (Popular)', 'Popular', 'सर्वाधिक लोकप्रिय')}
             </button>
 
             <button
               onClick={() => handleSortChange('newest')}
               className={`category-pill-btn ${activeSort === 'newest' ? 'active' : ''}`}
             >
-              नवीनतम (Newest)
+              {t('नवीनतम (Newest)', 'Newest', 'नवीनतम')}
             </button>
 
             <button
               onClick={() => handleSortChange('az')}
               className={`category-pill-btn ${activeSort === 'az' ? 'active' : ''}`}
             >
-              अक्षरानुसार (A to Z)
+              {t('अक्षरानुसार (A to Z)', 'A to Z', 'अक्षरानुसार')}
             </button>
           </div>
         </div>
@@ -393,7 +417,7 @@ function CategoryPageContent() {
         {/* Songs Cards Grid */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-            <p>गीत लोड भऽ रहल अछि...</p>
+            <p>{t('गीत लोड भऽ रहल अछि...', 'Loading tracks...', 'गीत लोड भऽ रहल अछि...')}</p>
           </div>
         ) : songs.length > 0 ? (
           <div>
@@ -413,7 +437,7 @@ function CategoryPageContent() {
                     className="cat-page-btn"
                   >
                     <ChevronLeft size={16} />
-                    <span>पाछाँ</span>
+                    <span>{t('पाछाँ', 'Previous', 'पाछाँ')}</span>
                   </button>
 
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -438,13 +462,13 @@ function CategoryPageContent() {
                     disabled={currentPage === totalPages}
                     className="cat-page-btn"
                   >
-                    <span>आगाँ</span>
+                    <span>{t('आगाँ', 'Next', 'आगाँ')}</span>
                     <ChevronRight size={16} />
                   </button>
                 </div>
 
                 <span className="category-pagination-info">
-                  गीत {startRange} - {endRange} (कुल {totalSongs} गीत)
+                  {t(`गीत ${startRange} - ${endRange} (कुल ${totalSongs} गीत)`, `Tracks ${startRange} - ${endRange} of ${totalSongs}`, `गीत ${startRange} - ${endRange} (कुल ${totalSongs} गीत)`)}
                 </span>
               </div>
             )}
@@ -452,9 +476,11 @@ function CategoryPageContent() {
         ) : (
           <div style={{ textAlign: 'center', padding: '70px 20px', color: 'var(--text-muted)' }} className="glass-panel">
             <Disc size={44} color="var(--accent-gold)" style={{ opacity: 0.5, margin: '0 auto 16px' }} />
-            <h3 style={{ color: '#F8FAFC', marginBottom: '8px' }}>कोनो गीत नै भेटल</h3>
+            <h3 style={{ color: '#F8FAFC', marginBottom: '8px' }}>{t('कोनो गीत नै भेटल', 'No tracks found', 'कोनो गीत नहि भेटल')}</h3>
             <p style={{ maxWidth: '440px', margin: '0 auto 16px', fontSize: '0.9rem' }}>
-              {searchQuery ? `"${searchQuery}" लेल कोनो परिणाम नै भेटल। खोज शब्द बदलि कऽ देखू।` : 'ई विधा में अखनि गीत उपलब्ध नै अछि।'}
+              {searchQuery
+                ? (isEnglish ? `No results found for "${searchQuery}". Try different keywords.` : `"${searchQuery}" लेल कोनो परिणाम नै भेटल। खोज शब्द बदलि कऽ देखू।`)
+                : (isEnglish ? 'No tracks currently available in this category.' : 'ई विधा में अखनि गीत उपलब्ध नै अछि।')}
             </p>
             {searchQuery && (
               <button
@@ -462,7 +488,7 @@ function CategoryPageContent() {
                 className="category-pill-btn active"
                 style={{ padding: '8px 20px' }}
               >
-                खोज हटाउ (Show All)
+                {t('खोज हटाउ (Show All)', 'Clear Search', 'खोज हटाउ')}
               </button>
             )}
           </div>
@@ -479,83 +505,115 @@ function CategoryPageContent() {
         <div className="category-hero-meta">
           <div className="category-hero-badge">
             <Sparkles size={14} color="#EAB308" />
-            <span>मिथिलाक सांस्कृतिक वर्गीकरण</span>
+            <span>{t('मिथिलाक सांस्कृतिक वर्गीकरण', 'Mithila Cultural Classification', 'मिथिलाक सांस्कृतिक वर्गीकरण')}</span>
           </div>
           <h1 className="category-hero-title font-traditional">
-            संस्कार, विधा एवं लोक पर्व
+            {t('संस्कार, विधा एवं लोक पर्व', 'Traditions, Sanskars & Folk Festivals', 'संस्कार, विधा एवं लोक पर्व')}
           </h1>
           <p className="category-hero-desc">
-            मिथिलाक जीवन-दर्शन जन्म (सोहर), उपनयन (बटगवनी), विवाह (कोहबर, समदाउन) सं लऽ कऽ महापर्व (छठि, महाशिवरात्रि) आ विद्यापति पदावली धरि आबद्ध अछि। कोनो सेहो विधा पर क्लिक कऽ कार्ड प्रारूप में सभ गीत देखू।
+            {isEnglish
+              ? 'Explore the vibrant musical heritage of Mithila spanning sacred life-cycle sanskars (Sohar, Samdaun), devotional traditions, seasonal folk festivals (Chhath), and Vidyapati Padavali. Click any category to explore all curated songs.'
+              : (isMaithiliPlus
+                  ? 'मिथिलाक जीवन-दर्शन जन्म (सोहर), उपनयन (बटगवनी), विवाह (कोहबर, समदाउन) सं लऽ कऽ महापर्व (छठि, महाशिवरात्रि) आ विद्यापति पदावली धरि आबद्ध अछि।'
+                  : 'मिथिलाक जीवन-दर्शन जन्म (सोहर), उपनयन (बटगवनी), विवाह (कोहबर, समदाउन) सं लऽ कऽ महापर्व (छठि, महाशिवरात्रि) आ विद्यापति पदावली धरि आबद्ध अछि। कोनो सेहो विधा पर क्लिक कऽ कार्ड प्रारूप में सभ गीत देखू।')}
           </p>
         </div>
 
         <div className="category-hero-stats">
           <div className="hero-stat-card">
             <span className="stat-value font-traditional">15</span>
-            <span className="stat-label">सांस्कृतिक विधा</span>
+            <span className="stat-label">{t('सांस्कृतिक विधा', 'Cultural Categories', 'सांस्कृतिक विधा')}</span>
           </div>
           <div className="hero-stat-card">
             <span className="stat-value font-traditional">2,354</span>
-            <span className="stat-label">संगृहीत रचना</span>
+            <span className="stat-label">{t('संगृहीत रचना', 'Curated Tracks', 'संगृहीत रचना')}</span>
           </div>
         </div>
       </div>
 
       {/* 4 Cultural Tiers */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
-        {CULTURAL_GROUPS.map((group) => (
-          <section key={group.groupId} className="cultural-group-section">
-            {/* Group Header */}
-            <div className="cultural-group-header">
-              <div>
-                <span className="cultural-tier-badge" style={{ borderColor: `${group.accentColor}55`, color: group.accentColor, background: `${group.accentColor}18` }}>
-                  {group.badge}
-                </span>
-                <h2 className="cultural-group-title font-traditional">
-                  {group.groupTitle}
-                </h2>
-                <p className="cultural-group-subtitle">
-                  {group.groupSubtitle}
-                </p>
-              </div>
-            </div>
+        {CULTURAL_GROUPS.map((group) => {
+          const groupTitle = group.groupId === 'sanskars'
+            ? t(group.groupTitle, 'Sacred Life-Cycle Sanskars (16 Sanskars)', 'सोलह संस्कार गीत')
+            : group.groupId === 'bhakti'
+            ? t(group.groupTitle, 'Devotional & Sacred Traditions (Bhagwati & Shiva)', 'भगवती वंदना एवं देव आराधना')
+            : group.groupId === 'festivals'
+            ? t(group.groupTitle, 'Seasons & Folk Festivals (Chhath, Sama, Jhijhiya)', 'ऋतु, लोक पर्व एवं उत्सव')
+            : t(group.groupTitle, 'Vidyapati & Classical Heritage (Padavali)', 'विद्यापति एवं शास्त्रीय धरोहर');
 
-            {/* Cards Grid: Clicking ANY card opens that category in-page */}
-            <div className="cultural-cards-grid">
-              {group.categories.map((cat) => (
-                <div
-                  key={cat.title}
-                  onClick={() => handleSelectCategory(cat.keyword)}
-                  className={`cultural-cat-card ${cat.theme}`}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="cat-card-top">
-                    <div className="cat-icon-container">
-                      <Disc size={22} color={group.accentColor} />
-                    </div>
-                    <span className="cat-count-badge font-traditional">
-                      {cat.count} गीत
-                    </span>
-                  </div>
+          const groupSubtitle = isEnglish
+            ? (group.groupId === 'sanskars'
+                ? 'Traditional folk songs celebrating birth, upanayan, wedding and samdaun.'
+                : group.groupId === 'bhakti'
+                ? 'Gosavani vandana, Durga stuti, Shiva nachari and divine hymns of Ram-Janaki.'
+                : group.groupId === 'festivals'
+                ? 'Chhath Mahaparva, Jhijhiya, Sama-Chakeva, Chaiti and festive seasonal cycles.'
+                : 'Immortal devotional, romantic and philosophical compositions of Mahakavi Vidyapati.')
+            : group.groupSubtitle;
 
-                  <div className="cat-card-body">
-                    <h3 className="cat-card-title font-traditional">
-                      {cat.title}
-                    </h3>
-                    <p className="cat-card-desc">
-                      {cat.desc}
-                    </p>
-                  </div>
+          const groupBadge = group.groupId === 'sanskars'
+            ? t(group.badge, 'Life-Cycle Sanskars', 'संस्कार विशेष')
+            : group.groupId === 'bhakti'
+            ? t(group.badge, 'Devotional Hymns', 'भक्ति एवं स्तुति')
+            : group.groupId === 'festivals'
+            ? t(group.badge, 'Seasons & Festivals', 'महापर्व एवं ऋतु')
+            : t(group.badge, 'Literary Heritage', 'साहित्यिक धरोहर');
 
-                  <div className="cat-card-footer">
-                    <span className="cat-explore-text">गीत कार्ड देखू</span>
-                    <ArrowRight size={14} className="cat-arrow-icon" />
-                  </div>
+          return (
+            <section key={group.groupId} className="cultural-group-section">
+              {/* Group Header */}
+              <div className="cultural-group-header">
+                <div>
+                  <span className="cultural-tier-badge" style={{ borderColor: `${group.accentColor}55`, color: group.accentColor, background: `${group.accentColor}18` }}>
+                    {groupBadge}
+                  </span>
+                  <h2 className="cultural-group-title font-traditional">
+                    {groupTitle}
+                  </h2>
+                  <p className="cultural-group-subtitle">
+                    {groupSubtitle}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </section>
-        ))}
+              </div>
+
+              {/* Cards Grid: Clicking ANY card opens that category in-page */}
+              <div className="cultural-cards-grid">
+                {group.categories.map((cat) => (
+                  <div
+                    key={cat.title}
+                    onClick={() => handleSelectCategory(cat.keyword)}
+                    className={`cultural-cat-card ${cat.theme}`}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="cat-card-top">
+                      <div className="cat-icon-container">
+                        <Disc size={22} color={group.accentColor} />
+                      </div>
+                      <span className="cat-count-badge font-traditional">
+                        {cat.count} {t('गीत', 'tracks', 'गीत')}
+                      </span>
+                    </div>
+
+                    <div className="cat-card-body">
+                      <h3 className="cat-card-title font-traditional">
+                        {getLocalizedCategoryTitle(cat.title, language, t)}
+                      </h3>
+                      <p className="cat-card-desc">
+                        {isEnglish ? 'Authentic traditional composition preserved in the Sur-Mithila archive.' : (isMaithiliPlus ? t(cat.desc) : cat.desc)}
+                      </p>
+                    </div>
+
+                    <div className="cat-card-footer">
+                      <span className="cat-explore-text">{t('गीत कार्ड देखू', 'Explore Tracks', 'गीत देखू')}</span>
+                      <ArrowRight size={14} className="cat-arrow-icon" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
 
       {/* Complete Index of All Categories: Clicking any pill opens in-page */}
@@ -563,7 +621,7 @@ function CategoryPageContent() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
           <Layers size={20} color="#EAB308" />
           <h2 className="font-traditional" style={{ fontSize: '1.4rem', color: '#F8FAFC', margin: 0 }}>
-            संपूर्ण विधा अनुक्रमणिका (Complete Index of Musical Genres)
+            {t('संपूर्ण विधा अनुक्रमणिका (Complete Index of Musical Genres)', 'Complete Index of Musical Genres', 'संपूर्ण विधा अनुक्रमणिका')}
           </h2>
         </div>
 
@@ -579,8 +637,8 @@ function CategoryPageContent() {
               className="category-index-pill"
               style={{ cursor: 'pointer' }}
             >
-              <span className="cat-index-name font-traditional">{c.name}</span>
-              <span className="cat-index-count">{c.count} गीत</span>
+              <span className="cat-index-name font-traditional">{getLocalizedCategoryTitle(c.name, language, t)}</span>
+              <span className="cat-index-count">{c.count} {t('गीत', 'tracks', 'गीत')}</span>
             </div>
           ))}
         </div>

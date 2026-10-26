@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Play, Info } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
+import { useLanguage } from '../../context/LanguageContext';
 import TranslatedText from '../TranslatedText';
 
 // Auto-advances every 8s via the CSS progress animation's onAnimationEnd.
@@ -11,11 +12,12 @@ import TranslatedText from '../TranslatedText';
 export default function Spotlight({ songs }) {
     const [i, setI] = useState(0);
     const { playTrack } = usePlayer();
+    const { formatSongTitle } = useLanguage();
     const next = useCallback(() => setI((v) => (v + 1) % songs.length), [songs.length]);
     const s = songs[i];
     if (!s) return null;
 
-    const title = s.title?.canonical || s.title?.devanagari || 'Maithili Geet';
+    const title = formatSongTitle(s) || s.title?.canonical || s.title?.devanagari || 'Maithili Geet';
     const art = s.poster?.image_url;
 
     return (

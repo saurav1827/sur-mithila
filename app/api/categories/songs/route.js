@@ -30,77 +30,10 @@ function getSongsCatalog() {
   return [];
 }
 
-export function matchSongCategory(s, category) {
-  if (!category || category === 'all') return true;
-  const k = category.trim().toLowerCase();
+import { matchSongCategory } from '../../../../lib/categories.js';
 
-  const cat = (s.category || '').toLowerCase();
-  const title = (s.title?.canonical || s.title?.devanagari || s.title?.raw_title || (typeof s.title === 'string' ? s.title : '')).toLowerCase();
-  const roman = (s.title?.roman || '').toLowerCase();
-  const desc = (s.description || '').toLowerCase();
-  const tags = (Array.isArray(s.tags) ? s.tags.join(' ') : '').toLowerCase();
-  const writer = (s.credits?.writer?.name || s.credits?.writer || '').toLowerCase();
-  const lyrics = (s.lyrics?.devanagari || s.lyrics?.raw_text || '').toLowerCase();
-  const ytTitle = (s.youtube?.title || '').toLowerCase();
-  const full = cat + ' ' + title + ' ' + roman + ' ' + desc + ' ' + tags + ' ' + writer + ' ' + lyrics + ' ' + ytTitle;
+export { matchSongCategory };
 
-  if (cat === k || cat.includes(k)) return true;
-
-  if (k.includes('छठ') || k.includes('chhath')) {
-    return (
-      full.includes('छठ') ||
-      full.includes('छठी') ||
-      full.includes('छठि') ||
-      full.includes('chhath') ||
-      full.includes('बहँगिया') ||
-      full.includes('बहंगिया') ||
-      full.includes('सुरुज') ||
-      full.includes('छठी माई') ||
-      full.includes('छठी मइया')
-    );
-  }
-  if (k.includes('सोहर') || k.includes('sohar') || k.includes('जन्मोत्सव')) {
-    return full.includes('सोहर') || full.includes('sohar') || full.includes('जन्मोत्सव') || full.includes('ललना') || (cat.includes('सोहर'));
-  }
-  if (k.includes('विवाह') || k.includes('vivah') || k.includes('लगन')) {
-    return full.includes('विवाह') || full.includes('vivah') || full.includes('लगन') || full.includes('मटकोर') || full.includes('कन्यादान') || full.includes('सिन्दूर') || full.includes('परिछन');
-  }
-  if (k.includes('कोहबर') || k.includes('kohbar')) {
-    return full.includes('कोहबर') || full.includes('kohbar');
-  }
-  if (k.includes('समदाउन') || k.includes('samdaun') || k.includes('विदाई')) {
-    return full.includes('समदाउन') || full.includes('samdaun') || full.includes('विदाई') || full.includes('दहेज');
-  }
-  if (k.includes('बटगवनी') || k.includes('batgavani') || k.includes('उपनयन')) {
-    return full.includes('बटगवनी') || full.includes('batgavani') || full.includes('उपनयन') || full.includes('जनेऊ') || full.includes('पाहुन');
-  }
-  if (k.includes('भगवती') || k.includes('bhagwati') || k.includes('गोसाउनि') || k.includes('दुर्गा')) {
-    return full.includes('भगवती') || full.includes('bhagwati') || full.includes('गोसाउनि') || full.includes('दुर्गा') || full.includes('भैरवि') || full.includes('जगदम्ब') || full.includes('कालिका') || full.includes('भवानी');
-  }
-  if (k.includes('नचारी') || k.includes('nachari') || k.includes('महेशवाणी') || k.includes('शिव')) {
-    return full.includes('नचारी') || full.includes('nachari') || full.includes('महेशवाणी') || full.includes('भोले') || full.includes('शिव') || full.includes('महादेव') || full.includes('डम डम');
-  }
-  if (k.includes('राम') || k.includes('ram') || k.includes('सिया') || k.includes('जानकी')) {
-    return full.includes('राम') || full.includes('ram') || full.includes('raghav') || full.includes('जानकी') || full.includes('सिया') || full.includes('रघुवर') || full.includes('अवध');
-  }
-  if (k.includes('कृष्ण') || k.includes('krishna') || k.includes('राधा')) {
-    return full.includes('कृष्ण') || full.includes('krishna') || full.includes('कान्हा') || full.includes('राधा') || full.includes('मुरली') || full.includes('गोकुल');
-  }
-  if (k.includes('झिझिया') || k.includes('jhijhiya')) {
-    return full.includes('झिझिया') || full.includes('jhijhiya');
-  }
-  if (k.includes('सामा') || k.includes('sama') || k.includes('चकेवा')) {
-    return full.includes('सामा') || full.includes('sama') || full.includes('चकेवा');
-  }
-  if (k.includes('चैती') || k.includes('chaiti') || k.includes('फगुआ') || k.includes('होली')) {
-    return full.includes('चैती') || full.includes('chaiti') || full.includes('फगुआ') || full.includes('होली') || full.includes('फागुन') || full.includes('रंग');
-  }
-  if (k.includes('विद्यापति') || k.includes('vidyapati')) {
-    return full.includes('विद्यापति') || full.includes('vidyapati') || writer.includes('विद्यापति');
-  }
-
-  return full.includes(k);
-}
 
 export async function GET(req) {
   try {

@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Heart, MessageCircle, Share2, Flag, Mic, CheckCircle,
-  Sparkles, Music2, Play, ExternalLink, Trash2, Loader2, X
+  Sparkles, Music2, Play, ExternalLink, Trash2, Loader2, X, Lock, Globe
 } from 'lucide-react';
 import PostPlayer from './PostPlayer';
 import CommentThread from './CommentThread';
@@ -48,6 +48,10 @@ export default function PostCard({
   const [toastMsg, setToastMsg] = useState('');
   const inflight = useRef(false);
 
+  // Privacy state & toggle
+  const [isPrivate, setIsPrivate] = useState(Boolean(post.is_private));
+  const [togglingPrivacy, setTogglingPrivacy] = useState(false);
+
   // Automatically open comments if instructed by notification route
   useEffect(() => {
     if (initialOpenComments) {
@@ -70,7 +74,34 @@ export default function PostCard({
       (post.user?.name && user.name && post.user.name.trim().toLowerCase() === user.name.trim().toLowerCase())
     )
   );
-  const canDeletePost = isOwner || user?.role === 'admin';
+  const isAdmin = Boolean(user?.isAdmin || user?.role === 'admin');
+  const canDeletePost = isOwner || isAdmin;
+  const canManagePrivacy = isAdmin || (isOwner && Boolean(user?.canManagePrivacy));
+
+  const handleTogglePrivacy = async () => {
+    if (togglingPrivacy) return;
+    const nextPrivacy = !isPrivate;
+    setTogglingPrivacy(true);
+    try {
+      const res = await fetch('/api/community/recordings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recordingId: post.id, is_private: nextPrivacy }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsPrivate(nextPrivacy);
+        setToastMsg(nextPrivacy ? t('रिकॉर्डिंग निजी कएल गेल', 'Recording set to private') : t('रिकॉर्डिंग सार्वजनिक कएल गेल', 'Recording set to public'));
+        setTimeout(() => setToastMsg(''), 2400);
+      } else {
+        alert(data.error || 'Failed to update recording privacy');
+      }
+    } catch (err) {
+      console.error('Privacy toggle error:', err);
+    } finally {
+      setTogglingPrivacy(false);
+    }
+  };
 
   const persist = (on) => {
     try {
@@ -234,10 +265,26 @@ export default function PostCard({
                   </span>
                   <CheckCircle size={14} color="var(--neon-saffron)" />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                   <span>@{post.user?.name?.toLowerCase().replace(/\s+/g, '_') || 'artist'}</span>
                   <span>•</span>
                   <span suppressHydrationWarning>{timeAgo(post.createdAt)}</span>
+                  {isPrivate && (
+                    <span style={{
+                      padding: '1px 6px',
+                      borderRadius: '4px',
+                      fontSize: '0.68rem',
+                      fontWeight: 600,
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      color: '#EF4444',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                    }}>
+                      <Lock size={10} />
+                      {t('निजी', 'Private')}
+                    </span>
+                  )}
                 </div>
               </div>
             </Link>
@@ -400,6 +447,30 @@ export default function PostCard({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {canManagePrivacy && (
+            <button
+              type="button"
+              className="action-icon-btn"
+              title={isPrivate ? t('सार्वजनिक बनाउ', 'Make Public') : t('निजी बनाउ', 'Make Private')}
+              aria-label="Toggle Privacy"
+              disabled={togglingPrivacy}
+              onClick={handleTogglePrivacy}
+              style={{
+                color: isPrivate ? '#10B981' : 'var(--text-muted)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = isPrivate ? '#10B981' : '#EAB308'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = isPrivate ? '#10B981' : 'var(--text-muted)'; }}
+            >
+              {togglingPrivacy ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : isPrivate ? (
+                <Globe size={16} />
+              ) : (
+                <Lock size={16} />
+              )}
+            </button>
+          )}
+
           {canDeletePost && (
             <button
               type="button"

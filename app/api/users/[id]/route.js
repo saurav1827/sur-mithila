@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDatabase } from '../../../../lib/mongodb';
+import { getAuthRole } from '../../../../lib/authz';
+import { canViewUserProfile } from '../../../../lib/privacy';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,12 +45,13 @@ export async function GET(request, { params }) {
       if (recSample) {
         userDoc = {
           id: recSample.user_id || rawId,
-          name: recSample.user_name || normalizedName,
+          name: recSample.user_name || decodedId,
           avatar: recSample.user_avatar || null,
           bio: (recSample.caption && recSample.caption.trim()) ? recSample.caption.trim() : '',
           location: '',
           joined_at: recSample.created_at || null,
           role: 'creator',
+          is_private: false,
         };
       }
     }
@@ -60,20 +63,70 @@ export async function GET(request, { params }) {
     const resolvedUserId = userDoc.id;
     const resolvedUserName = userDoc.name;
 
+    // Check viewer identity & permissions
+    const { userId: viewerUserId, role: viewerRole, email: viewerEmail } = await getAuthRole();
+    const isOwner = Boolean(
+      (viewerUserId && resolvedUserId && viewerUserId === resolvedUserId) ||
+      (viewerUserId && userDoc.id === viewerUserId)
+    );
+    const isAdmin = viewerRole === 'admin';
+
+    // Privacy Gatekeeper: If user account is private, only owner and admin can view profile
+    if (userDoc.is_private) {
+      const allowed = canViewUserProfile({
+        targetUser: userDoc,
+        viewerUserId,
+        viewerRole,
+        viewerEmail,
+      });
+
+      if (!allowed) {
+        const handle = '@' + (userDoc.name || 'artist').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        return NextResponse.json({
+          success: true,
+          isLocked: true,
+          is_private: true,
+          user: {
+            id: userDoc.id,
+            name: userDoc.name,
+            handle,
+            avatar: userDoc.avatar || null,
+            bio: '',
+            location: '',
+            joined_at: userDoc.joined_at || null,
+            role: userDoc.role || 'creator',
+            is_private: true,
+            stats: {
+              recordingsCount: 0,
+              totalLikes: 0,
+              totalComments: 0,
+            },
+          },
+          recordings: [],
+          recentComments: [],
+          message: 'This account is private.',
+        });
+      }
+    }
+
     const escapedUserName = (resolvedUserName || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const userPattern = `^(${escapedUserName}|${escapedUserName.replace(/_/g, ' ')}|${escapedUserName.replace(/\s+/g, '_')})$`;
 
-    // 3. Fetch all community covers by this creator
+    // 3. Fetch community covers by this creator
+    // Owner and admin can see all covers (including private ones); others see only public covers
+    const recordingQuery = {
+      $or: [
+        ...(resolvedUserId ? [{ user_id: resolvedUserId }] : []),
+        { user_name: resolvedUserName },
+        { user_name: { $regex: new RegExp(userPattern, 'i') } },
+      ],
+      status: 'published',
+      ...(!isOwner && !isAdmin ? { is_private: { $ne: true } } : {}),
+    };
+
     const rawRecordings = await db
       .collection('community_recordings')
-      .find({
-        $or: [
-          ...(resolvedUserId ? [{ user_id: resolvedUserId }] : []),
-          { user_name: resolvedUserName },
-          { user_name: { $regex: new RegExp(userPattern, 'i') } },
-        ],
-        status: 'published',
-      })
+      .find(recordingQuery)
       .sort({ created_at: -1 })
       .toArray();
 
@@ -104,11 +157,12 @@ export async function GET(request, { params }) {
         caption: r.caption || '',
         likes: typeof r.likes === 'number' ? r.likes : (r.likedBy?.length || 0),
         comments_count: r.comments_count ?? r.comments?.length ?? 0,
+        is_private: Boolean(r.is_private),
         created_at: r.created_at || new Date().toISOString(),
       };
     });
 
-    // 4. Calculate genuine pure stats & categories
+    // 4. Calculate stats & categories
     const recordingsCount = recordings.length;
     const totalLikes = recordings.reduce((acc, r) => acc + (r.likes || 0), 0);
     const totalComments = recordings.reduce((acc, r) => acc + (r.comments_count || 0), 0);
@@ -128,6 +182,8 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       success: true,
+      isLocked: false,
+      is_private: Boolean(userDoc.is_private),
       user: {
         id: userDoc.id,
         name: userDoc.name,
@@ -137,6 +193,7 @@ export async function GET(request, { params }) {
         location: userDoc.location || '',
         joined_at: userDoc.joined_at || null,
         role: userDoc.role || 'user',
+        is_private: Boolean(userDoc.is_private),
         genres,
         stats: {
           recordingsCount,
@@ -158,3 +215,4 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

@@ -2,10 +2,12 @@ import React from 'react';
 import { getSongs, getDatabaseStats, getCategories } from '../lib/data-service';
 import { getFeedRows, slim } from '../lib/feed-service';
 import { getAIRecommendations } from '../lib/ai-recommendation-service';
+import { getCategoryMeta } from '../lib/categories';
 import Sidebar from '../components/home/Sidebar';
 import Spotlight from '../components/home/Spotlight';
 import HomeFeed from '../components/home/HomeFeed';
 import CategoryChips from '../components/CategoryChips';
+import TranslatedText from '../components/TranslatedText';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +27,7 @@ export default async function HomePage({ searchParams }) {
   // Spotlight: Curated AI recommendations with high-res poster artwork, falling back to top pool
   const fallbackSpotlight = pool.songs.filter((s) => s.poster?.image_url).slice(0, 5).map((s) => slim(s));
   const spotlight = (aiSpotlight && aiSpotlight.length >= 3) ? aiSpotlight : fallbackSpotlight;
-  const activeCat = categoryList.find((c) => c.value === category || c.name === category);
+  const catMeta = getCategoryMeta(category);
 
   return (
     <div className="feed-layout">
@@ -43,7 +45,7 @@ export default async function HomePage({ searchParams }) {
 
         {!isAll && (
           <h1 className="font-traditional" style={{ fontSize: '2rem', color: '#F8FAFC' }}>
-            {activeCat?.name || category}
+            <TranslatedText maithili={catMeta.name} english={catMeta.en} pure={catMeta.pure} />
           </h1>
         )}
 

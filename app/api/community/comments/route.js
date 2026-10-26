@@ -6,6 +6,7 @@ import { recordingFilter } from '../../../../lib/community-service';
 import { moderateComment } from '../../../../lib/ai-agents';
 import { getAuthRole } from '../../../../lib/authz';
 import { createNotification, dispatchMentions } from '../../../../lib/notification-service';
+import { canViewRecording, isAdminEmail } from '../../../../lib/privacy';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,15 +16,36 @@ export async function GET(req) {
   if (!recordingId) return NextResponse.json({ comments: [] });
 
   try {
-    const { userId: currentUserId } = await auth();
+    const { userId: currentUserId, role: currentRole, email: currentEmail } = await getAuthRole();
     const db = await getDatabase();
     if (!db) return NextResponse.json({ comments: [] });
 
     // Fetch post creator ID to inform the client of post ownership
     const recording = await db.collection('community_recordings').findOne(
       recordingFilter(recordingId),
-      { projection: { user_id: 1 } }
+      { projection: { user_id: 1, is_private: 1 } }
     );
+    if (!recording) return NextResponse.json({ comments: [] });
+
+    // Privacy check: If recording or creator account is private, only owner and admin can view comments
+    let creatorUser = null;
+    if (recording.user_id) {
+      creatorUser = await db.collection('users').findOne(
+        { id: recording.user_id },
+        { projection: { id: 1, is_private: 1 } }
+      );
+    }
+    const allowed = canViewRecording({
+      recording,
+      creatorUser,
+      viewerUserId: currentUserId,
+      viewerRole: currentRole,
+      viewerEmail: currentEmail,
+    });
+    if (!allowed) {
+      return NextResponse.json({ comments: [], isPrivate: true });
+    }
+
     const recordingAuthorId = recording?.user_id || null;
 
     const rawComments = await db.collection('community_comments')
@@ -100,9 +122,35 @@ export async function POST(req) {
       }, { status: 403 });
     }
 
-    // 2. Check if user is blocked by the creator of this recording
+    // 2. Check privacy of recording and creator
     const recording = await db.collection('community_recordings').findOne(recordingFilter(recordingId));
-    if (recording?.user_id && recording.user_id !== userId) {
+    if (!recording) {
+      return NextResponse.json({ success: false, error: 'Recording not found' }, { status: 404 });
+    }
+
+    let creatorUser = null;
+    if (recording.user_id) {
+      creatorUser = await db.collection('users').findOne(
+        { id: recording.user_id },
+        { projection: { id: 1, is_private: 1 } }
+      );
+    }
+    const { role: userRole, email: userEmail } = await getAuthRole();
+    const canComment = canViewRecording({
+      recording,
+      creatorUser,
+      viewerUserId: userId,
+      viewerRole: userRole,
+      viewerEmail: userEmail,
+    });
+    if (!canComment) {
+      return NextResponse.json({
+        success: false,
+        error: 'This recording is private. Only the creator and administrators can comment.'
+      }, { status: 403 });
+    }
+
+    if (recording.user_id && recording.user_id !== userId) {
       const isBlocked = await db.collection('creator_blocks').findOne({
         creator_id: recording.user_id,
         blocked_user_id: userId,

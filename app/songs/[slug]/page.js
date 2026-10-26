@@ -12,6 +12,7 @@ import SongDetailComments from '../../../components/SongDetailComments';
 import SongActionButtons from '../../../components/SongActionButtons';
 import { WatchProvider } from '../../../components/WatchProvider';
 import { CheckCircle, ShieldCheck, ArrowLeft, Mic } from 'lucide-react';
+import TranslatedText from '../../../components/TranslatedText';
 
 import { getDatabase } from '../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
@@ -61,16 +62,40 @@ export default async function SongDetailPage({ params, searchParams }) {
           ]
         });
         if (found) {
-          initialCover = {
-            id: found.recording_id || found._id.toString(),
-            userName: found.user_name || 'Mithila Singer',
-            userAvatar: found.user_avatar || null,
-            userId: found.user_id || null,
-            audioUrl: found.audio_url,
-            likes: found.likes || 0,
-            caption: found.caption || '',
-            createdAt: found.created_at ? new Date(found.created_at).toISOString() : null,
-          };
+          let creatorUser = null;
+          if (found.user_id) {
+            creatorUser = await db.collection('users').findOne(
+              { id: found.user_id },
+              { projection: { id: 1, is_private: 1 } }
+            );
+          }
+
+          let allowed = true;
+          if (found.is_private || creatorUser?.is_private) {
+            const { getAuthRole } = await import('../../../lib/authz');
+            const { canViewRecording } = await import('../../../lib/privacy');
+            const { userId: viewerUserId, role: viewerRole, email: viewerEmail } = await getAuthRole();
+            allowed = canViewRecording({
+              recording: found,
+              creatorUser,
+              viewerUserId,
+              viewerRole,
+              viewerEmail,
+            });
+          }
+
+          if (allowed) {
+            initialCover = {
+              id: found.recording_id || found._id.toString(),
+              userName: found.user_name || 'Mithila Singer',
+              userAvatar: found.user_avatar || null,
+              userId: found.user_id || null,
+              audioUrl: found.audio_url,
+              likes: found.likes || 0,
+              caption: found.caption || '',
+              createdAt: found.created_at ? new Date(found.created_at).toISOString() : null,
+            };
+          }
         }
       }
     } catch (err) {
@@ -138,7 +163,9 @@ export default async function SongDetailPage({ params, searchParams }) {
             }}
           >
             <ArrowLeft size={16} />
-            <span>पाछू जाउ / Back to Catalog</span>
+            <span>
+              <TranslatedText maithili="पाछू जाउ (Back to Catalog)" english="Back to Catalog" maithiliPlus="पाछू जाउ" />
+            </span>
           </Link>
         </div>
 
@@ -216,19 +243,27 @@ export default async function SongDetailPage({ params, searchParams }) {
                   marginTop: '8px'
                 }}>
                   <div>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>गायक / Singer</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <TranslatedText maithili="गायक (Singer)" english="Singer" maithiliPlus="गायक" />
+                    </span>
                     <p style={{ fontSize: '0.95rem', fontWeight: 600, color: '#F8FAFC' }}>{singer}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>रचयिता / Lyricist</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <TranslatedText maithili="रचयिता (Lyricist)" english="Lyricist" maithiliPlus="रचयिता" />
+                    </span>
                     <p style={{ fontSize: '0.95rem', fontWeight: 600, color: '#F8FAFC' }}>{writer}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>संगीतकार / Composer</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <TranslatedText maithili="संगीतकार (Composer)" english="Composer" maithiliPlus="संगीतकार" />
+                    </span>
                     <p style={{ fontSize: '0.95rem', fontWeight: 600, color: '#F8FAFC' }}>{composer}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>एल्बम / Album</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <TranslatedText maithili="एल्बम (Album)" english="Album" maithiliPlus="एल्बम" />
+                    </span>
                     <p style={{ fontSize: '0.95rem', fontWeight: 600, color: '#F8FAFC' }}>{song.credits?.album || 'पारंपरिक लोकधारा'}</p>
                   </div>
                 </div>
@@ -271,10 +306,19 @@ export default async function SongDetailPage({ params, searchParams }) {
           }}>
             <div>
               <h3 className="font-traditional" style={{ fontSize: '1.35rem', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                <span style={{ fontSize: '1.5rem' }}>🎙️</span> गाउ-मिथिला स्टुडियो (Gaau-Mithila Karaoke Studio)
+                <span style={{ fontSize: '1.5rem' }}>🎙️</span>
+                <TranslatedText
+                  maithili="गाउ-मिथिला स्टुडियो (Gaau-Mithila Karaoke Studio)"
+                  english="Gaau-Mithila Karaoke Studio"
+                  maithiliPlus="गाउ-मिथिला स्टुडियो"
+                />
               </h3>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '4px', maxWidth: '600px' }}>
-                अपन स्वर मे एहि गीत कें रिकाॅर्ड करू, वोकल FX लगाउ आ सुर-मिथिला सोशल फीड पर साझा करू!
+                <TranslatedText
+                  maithili="अपन स्वर मे एहि गीत कें रिकाॅर्ड करू, वोकल FX लगाउ आ सुर-मिथिला सोशल फीड पर साझा करू!"
+                  english="Record this song in your voice, apply vocal FX, and share to the Sur-Mithila social feed!"
+                  maithiliPlus="अपन स्वर मे एहि गीत कें रिकाॅर्ड करू, ध्वनि प्रभाव लगाउ आ सुर-मिथिला सामाजिक मंच पर साझा करू!"
+                />
               </p>
             </div>
             <Link
@@ -295,7 +339,13 @@ export default async function SongDetailPage({ params, searchParams }) {
               }}
             >
               <Mic size={18} />
-              <span>रिकाॅर्ड करू (Sing Cover)</span>
+              <span>
+                <TranslatedText
+                  maithili="रिकाॅर्ड करू (Sing Cover)"
+                  english="Sing Cover"
+                  maithiliPlus="रिकाॅर्ड करू"
+                />
+              </span>
             </Link>
           </div>
 
@@ -310,13 +360,21 @@ export default async function SongDetailPage({ params, searchParams }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <ShieldCheck size={20} color="var(--accent-emerald)" />
                 <h3 className="font-traditional" style={{ fontSize: '1.2rem', color: '#F8FAFC', margin: 0 }}>
-                  डेटा प्रमाणिकता एवं स्रोत (Data Provenance)
+                  <TranslatedText
+                    maithili="डेटा प्रमाणिकता एवं स्रोत (Data Provenance)"
+                    english="Data Provenance & Sources"
+                    maithiliPlus="डेटा प्रमाणिकता एवं स्रोत"
+                  />
                 </h3>
               </div>
               <SuggestEditButton song={song} />
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px' }}>
-              एहि रचनाक लेखक, गायक एवं युट्यूब भिडियो लिंकक निर्धारण निम्नलिखित प्रामाणिक स्रोतों सं कएल गेल अछि:
+              <TranslatedText
+                maithili="एहि रचनाक लेखक, गायक एवं युट्यूब भिडियो लिंकक निर्धारण निम्नलिखित प्रामाणिक स्रोतों सं कएल गेल अछि:"
+                english="The lyricist, singer, and video sources for this composition were verified from the following sources:"
+                maithiliPlus="एहि रचनाक लेखक, गायक एवं भिडियो लिंकक निर्धारण निम्नलिखित प्रामाणिक स्रोतों सं कएल गेल अछि:"
+              />
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

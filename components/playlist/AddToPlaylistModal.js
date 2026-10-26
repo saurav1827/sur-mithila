@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ListPlus, Check, Plus, Music2, FolderPlus, X, Lock, Globe } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AddToPlaylistModal({ song, isOpen, onClose }) {
   const { user } = useAuth();
+  const { t, formatSongTitle, isEnglish, isMaithiliPlus } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -96,9 +98,9 @@ export default function AddToPlaylistModal({ song, isOpen, onClose }) {
     );
 
     if (nextAction === 'add') {
-      showToast(`"${playlist.title}" में जोड़ल गेल!`);
+      showToast(isEnglish ? `Added to "${playlist.title}"!` : isMaithiliPlus ? `"${playlist.title}" में जोड़ल गेल!` : `"${playlist.title}" में जोड़ल गेल (Added)!`);
     } else {
-      showToast(`"${playlist.title}" सं हटाओल गेल`);
+      showToast(isEnglish ? `Removed from "${playlist.title}"!` : isMaithiliPlus ? `"${playlist.title}" सं हटाओल गेल!` : `"${playlist.title}" सं हटाओल गेल (Removed)!`);
     }
 
     // 1. Update in localStorage cache
@@ -187,7 +189,7 @@ export default function AddToPlaylistModal({ song, isOpen, onClose }) {
 
       setPlaylists(prev => [created, ...prev]);
       setNewTitle('');
-      showToast(`नव प्लेलिस्ट "${title}" बनल आ गीत जोड़ल गेल!`);
+      showToast(isEnglish ? `Created "${title}" and track added!` : isMaithiliPlus ? `नव तालिका "${title}" बनल आ गीत जोड़ल गेल!` : `नव प्लेलिस्ट "${title}" बनल आ गीत जोड़ल गेल!`);
     } catch (e) {
       console.error('Failed to create playlist:', e);
     } finally {
@@ -197,9 +199,11 @@ export default function AddToPlaylistModal({ song, isOpen, onClose }) {
 
   if (!isOpen || !mounted) return null;
 
-  const songTitle = typeof song?.title === 'string'
-    ? song.title
-    : (song?.title?.canonical || song?.title?.devanagari || 'मैथिली गीत');
+  const songTitle = formatSongTitle
+    ? formatSongTitle(song)
+    : (typeof song?.title === 'string'
+      ? song.title
+      : (song?.title?.canonical || song?.title?.devanagari || 'मैथिली गीत'));
 
   const modalContent = (
     <div className="playlist-modal-backdrop" onClick={onClose}>
@@ -208,9 +212,11 @@ export default function AddToPlaylistModal({ song, isOpen, onClose }) {
         <div className="playlist-modal-header">
           <div className="modal-title-box">
             <ListPlus size={20} color="#EAB308" />
-            <h3 className="modal-heading font-traditional">प्लेलिस्ट में जोड़ू (Add to Playlist)</h3>
+            <h3 className="modal-heading font-traditional">
+              {t('प्लेलिस्ट में जोड़ू (Add to Playlist)', 'Add to Playlist', 'तालिका में जोड़ू')}
+            </h3>
           </div>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
+          <button className="modal-close-btn" onClick={onClose} aria-label={t('बंद करू (Close)', 'Close', 'बंद करू')}>
             <X size={18} />
           </button>
         </div>
@@ -232,7 +238,9 @@ export default function AddToPlaylistModal({ song, isOpen, onClose }) {
         {/* Playlists List */}
         <div className="playlist-items-list">
           {loading ? (
-            <div className="playlist-modal-loading">प्लेलिस्ट लोड भऽ रहल अछि...</div>
+            <div className="playlist-modal-loading">
+              {t('प्लेलिस्ट लोड भऽ रहल अछि...', 'Loading playlists...', 'तालिका लोड भऽ रहल अछि...')}
+            </div>
           ) : playlists.length > 0 ? (
             playlists.map((pl) => {
               const songId = song?.id || song?.slug;
@@ -256,14 +264,14 @@ export default function AddToPlaylistModal({ song, isOpen, onClose }) {
 
                   <div className="playlist-row-info">
                     <span className="playlist-row-title font-traditional">{pl.title}</span>
-                    <span className="playlist-row-count">{pl.track_ids?.length || 0} गीत</span>
+                    <span className="playlist-row-count">{pl.track_ids?.length || 0} {t('गीत (Songs)', 'tracks', 'गीत')}</span>
                   </div>
                 </div>
               );
             })
           ) : (
             <div className="playlist-empty-notice">
-              अखनि कोनो प्लेलिस्ट नै बनल अछि। नीचाँ सं नव प्लेलिस्ट बनाउ!
+              {t('अखनि कोनो प्लेलिस्ट नै बनल अछि। नीचाँ सं नव प्लेलिस्ट बनाउ!', 'No playlists yet. Create one below!', 'अखनि कोनो तालिका नै बनल अछि। नीचाँ सं नव तालिका बनाउ!')}
             </div>
           )}
         </div>
@@ -276,7 +284,7 @@ export default function AddToPlaylistModal({ song, isOpen, onClose }) {
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="नव प्लेलिस्टक नाम (e.g. हमर प्रिय सोहर)..."
+              placeholder={t('नव प्लेलिस्टक नाम (e.g. हमर प्रिय सोहर)...', 'New playlist name (e.g. My Favorite Sohar)...', 'नव तालिकॉक नाम (उदा. हमर प्रिय सोहर)...')}
               className="playlist-inline-input"
               maxLength={60}
             />
@@ -288,7 +296,7 @@ export default function AddToPlaylistModal({ song, isOpen, onClose }) {
             className="playlist-create-submit-btn"
           >
             <Plus size={15} />
-            <span>{creating ? 'बनि रहल...' : 'बनाउ आ जोड़ू'}</span>
+            <span>{creating ? t('बनि रहल...', 'Creating...', 'बनि रहल...') : t('बनाउ आ जोड़ू (Create & Add)', 'Create & Add', 'बनाउ आ जोड़ू')}</span>
           </button>
         </form>
       </div>

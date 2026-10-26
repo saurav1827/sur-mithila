@@ -1,6 +1,7 @@
 import React from 'react';
 import { getArtists } from '../../lib/data-service';
 import ArtistsCatalogView from '../../components/artist/ArtistsCatalogView';
+import TranslatedText from '../../components/TranslatedText';
 import { Mic, Sparkles } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -32,19 +33,29 @@ export default async function ArtistsPage() {
         }} />
 
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-          <span className="gold-badge">कलाकार संग्रह</span>
+          <span className="gold-badge">
+            <TranslatedText maithili="कलाकार संग्रह" english="Artists Collection" maithiliPlus="कलाकार संग्रह" />
+          </span>
           <span style={{ fontSize: '0.8rem', color: 'var(--accent-gold-light)', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Sparkles size={13} />
-            प्रमाणित स्वर
+            <TranslatedText maithili="प्रमाणित स्वर (Verified Voices)" english="Verified Voices" maithiliPlus="प्रमाणित स्वर" />
           </span>
         </div>
 
         <h1 className="font-traditional" style={{ fontSize: '2.5rem', color: '#F8FAFC', marginBottom: '10px', lineHeight: 1.2 }}>
-          मैथिली गायक एवं गायिका (Maithili Singers & Artists)
+          <TranslatedText
+            maithili="मैथिली गायक एवं गायिका (Maithili Singers & Artists)"
+            english="Maithili Singers & Artists"
+            maithiliPlus="मैथिली गायक एवं गायिका"
+          />
         </h1>
 
         <p style={{ fontSize: '1.02rem', color: 'var(--text-secondary)', maxWidth: '850px', lineHeight: 1.5 }}>
-          बिहार कोकिला शारदा सिन्हा, मैथिली ठाकुर, पूनम मिश्रा, कुंज बिहारी मिश्र, दिलीप दरभंगिया, माधव राय सहित मिथिलाक समस्त मूर्धन्य गायकों के अमर स्वर आ संपूर्ण संगीत संग्रह।
+          <TranslatedText
+            maithili="बिहार कोकिला शारदा सिन्हा, मैथिली ठाकुर, पूनम मिश्रा, कुंज बिहारी मिश्र, दिलीप दरभंगिया, माधव राय सहित मिथिलाक समस्त मूर्धन्य गायकों के अमर स्वर आ संपूर्ण संगीत संग्रह।"
+            english="The complete musical catalog and legendary recordings of celebrated Maithili vocalists, including Sharda Sinha, Maithili Thakur, Poonam Mishra, Kunj Bihari Mishra, Dilip Darbhangiya, and Madhav Rai."
+            maithiliPlus="बिहार कोकिला शारदा सिन्हा, मैथिली ठाकुर, पूनम मिश्रा, कुंज बिहारी मिश्र, दिलीप दरभंगिया, माधव राय सहित मिथिलाक समस्त मूर्धन्य गायकों के अमर स्वर आ संपूर्ण संगीत संग्रह।"
+          />
         </p>
       </div>
 

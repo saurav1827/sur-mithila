@@ -20,6 +20,15 @@ export function PlayerProvider({ children }) {
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
 
+  // Non-blocking in-app player toast notification
+  const [playerToast, setPlayerToast] = useState(null);
+  const showPlayerToast = useCallback((message, type = 'error', duration = 4000) => {
+    setPlayerToast({ message, type });
+    setTimeout(() => {
+      setPlayerToast((curr) => (curr?.message === message ? null : curr));
+    }, duration);
+  }, []);
+
   const [lyricsBySlug, setLyricsBySlug] = useState({});
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const lyricsRequested = useRef(new Set()); // avoids duplicate fetches
@@ -173,6 +182,52 @@ export function PlayerProvider({ children }) {
       poster: song.poster
     };
 
+    const isCover =
+      (song.id && (String(song.id).startsWith('cover-') || String(song.id).startsWith('rec_'))) ||
+      selectedRec.audio?.hosted_audio_url?.includes('sur_mithila_covers') ||
+      song.audio?.hosted_audio_url?.includes('sur_mithila_covers');
+
+    // If it is a cover recording, verify real-time playback access
+    if (isCover) {
+      const coverId = song.id || '';
+      const audioUrl = selectedRec.audio?.hosted_audio_url || song.audio?.hosted_audio_url || '';
+      fetch(`/api/recordings/access?id=${encodeURIComponent(coverId)}&url=${encodeURIComponent(audioUrl)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.allowed === false) {
+            // Stop playback immediately and close player cleanly
+            closePlayer();
+
+            // Remove from history in localStorage
+            try {
+              const historyRaw = localStorage.getItem('sur_mithila_history') || '[]';
+              const history = JSON.parse(historyRaw);
+              const cleanRecId = String(song.id || '').replace(/^cover-/, '');
+              const cleaned = history.filter((item) => {
+                const itemId = String(item.id || '');
+                return itemId !== song.id &&
+                       itemId !== `cover-${song.id}` &&
+                       itemId !== cleanRecId &&
+                       itemId !== `cover-${cleanRecId}`;
+              });
+              localStorage.setItem('sur_mithila_history', JSON.stringify(cleaned));
+            } catch {}
+
+            // Dispatch real-time removal event for WatchHistoryTab and ProfilePage
+            window.dispatchEvent(new CustomEvent('sur_mithila_history_updated', {
+              detail: { id: song.id, removed: true }
+            }));
+
+            // Sync removal with backend
+            fetch(`/api/history?songId=${encodeURIComponent(song.id)}`, { method: 'DELETE' }).catch(() => {});
+
+            // Show sleek in-app toast notification instead of browser alert
+            showPlayerToast(data.message || 'ई प्रस्तुति निजी अछि। केवल रचयिता आ व्यवस्थापक एकरा सुनि सकैत छथि।');
+          }
+        })
+        .catch(() => {});
+    }
+
     setCurrentTrack({
       song,
       recording: selectedRec,
@@ -185,20 +240,44 @@ export function PlayerProvider({ children }) {
     try {
       const historyRaw = localStorage.getItem('sur_mithila_history') || '[]';
       const history = JSON.parse(historyRaw);
-      const filtered = history.filter(item => item.id !== song.id);
+      const isCoverTrack =
+        Boolean(isCover) ||
+        (song.id && (String(song.id).startsWith('cover-') || String(song.id).startsWith('rec_'))) ||
+        selectedRec.audio?.hosted_audio_url?.includes('sur_mithila_covers') ||
+        song.audio?.hosted_audio_url?.includes('sur_mithila_covers');
+
+      let historyId = song.id;
+      let historyTitle = song.title?.canonical || song.title?.devanagari || (typeof song.title === 'string' ? song.title : 'Maithili Geet');
+      let historySinger = song.credits?.singer || song.singer || 'पारंपरिक';
+      let historyAudio = selectedRec.audio?.hosted_audio_url ? selectedRec.audio : (song.audio || {});
+      let historyPoster = selectedRec.poster?.image_url || selectedRec.poster || song.poster?.image_url || song.poster || null;
+
+      if (isCoverTrack) {
+        const rawRecId = selectedRec.recording_id || selectedRec.id || song.id;
+        const cleanRecId = String(rawRecId).replace(/^cover-/, '');
+        historyId = `cover-${cleanRecId}`;
+        const baseTitle = typeof historyTitle === 'string' ? historyTitle.replace(/\s*\(Cover\)$/i, '') : 'Maithili Geet';
+        historyTitle = `${baseTitle} (Cover)`;
+        const baseSinger = selectedRec.artist_name || selectedRec.user_name || song.singer || 'कलाकार';
+        const cleanSinger = typeof baseSinger === 'string' ? baseSinger.replace(/\s*\(Cover\)$/i, '') : 'कलाकार';
+        historySinger = `${cleanSinger} (Cover)`;
+      }
+
       const historyItem = {
-        id: song.id,
+        id: historyId,
         slug: song.slug,
-        title: song.title?.canonical || song.title?.devanagari || (typeof song.title === 'string' ? song.title : 'Maithili Geet'),
-        singer: song.credits?.singer || song.singer || 'पारंपरिक',
-        poster: song.poster?.image_url || song.poster || null,
-        category: song.category || 'लोकगीत',
-        youtube: song.youtube || {},
-        audio: song.audio || {},
+        title: historyTitle,
+        singer: historySinger,
+        poster: historyPoster,
+        category: song.category || (isCoverTrack ? 'कवर प्रस्तुति' : 'लोकगीत'),
+        youtube: isCoverTrack ? (selectedRec.youtube || {}) : (song.youtube || {}),
+        audio: historyAudio,
         played_at: new Date().toISOString()
       };
+      const filtered = history.filter(item => item.id !== historyItem.id && item.id !== song.id);
       const updated = [historyItem, ...filtered].slice(0, 80);
       localStorage.setItem('sur_mithila_history', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('sur_mithila_history_updated', { detail: historyItem }));
 
       // Asynchronously sync with backend if user is authenticated
       fetch('/api/history', {
@@ -468,9 +547,78 @@ export function PlayerProvider({ children }) {
         playPrevious,
         addToQueue,
         toggleShuffle,
-        toggleRepeat
+        toggleRepeat,
+        playerToast,
+        showPlayerToast
       }}
     >
+      {playerToast && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            maxWidth: '92vw',
+            width: 'max-content',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 20px',
+            borderRadius: '14px',
+            background: 'rgba(20, 20, 25, 0.95)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.55), 0 0 16px rgba(239, 68, 68, 0.2)',
+            color: '#FAFAFA',
+            fontSize: '0.92rem',
+            fontWeight: 500,
+            animation: 'fadeSlideUp 0.25s ease-out',
+          }}
+          role="alert"
+        >
+          <div style={{
+            width: '26px',
+            height: '26px',
+            borderRadius: '50%',
+            background: 'rgba(239, 68, 68, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            color: '#EF4444'
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <span style={{ lineHeight: 1.4 }}>{playerToast.message}</span>
+          <button
+            onClick={() => setPlayerToast(null)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#9CA3AF',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '6px',
+              marginLeft: '6px'
+            }}
+            aria-label="Close"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      )}
       {children}
     </PlayerContext.Provider>
   );

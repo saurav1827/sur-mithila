@@ -6,15 +6,21 @@ import { Play, Pause, Heart, Radio, CheckCircle, Disc, Mic, ListPlus } from 'luc
 import YoutubeIcon from './YoutubeIcon';
 import AddToPlaylistModal from './playlist/AddToPlaylistModal';
 import { usePlayer } from '../context/PlayerContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SongCard({ song }) {
   const { playTrack, currentTrack, isPlaying } = usePlayer();
+  const { t, isEnglish, isMaithiliPlus } = useLanguage();
   const [isFavorited, setIsFavorited] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
-  const title = song?.title?.canonical || song?.title?.devanagari || 'Maithili Geet';
+  const rawDevanagari = song?.title?.devanagari || song?.title?.canonical || 'Maithili Geet';
   const romanTitle = song?.title?.roman || '';
-  const singer = song?.credits?.singer || 'पारंपरिक';
+  // In English mode, prefer Roman title; otherwise Devanagari
+  const displayTitle = isEnglish ? (romanTitle || song?.title?.canonical || rawDevanagari) : rawDevanagari;
+  const secondaryTitle = isEnglish ? null : (isMaithiliPlus ? null : romanTitle);
+
+  const singer = song?.credits?.singer || (isEnglish ? 'Traditional' : 'पारंपरिक');
   const ytId = song?.youtube?.video_id || (song?.youtube?.url ? (song.youtube.url.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/)([a-zA-Z0-9_-]{11})/)?.[1]) : null);
   const posterUrl = song?.poster?.image_url || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
   const hasYoutube = Boolean(song?.youtube?.url || song?.youtube?.video_id || ytId);
@@ -24,7 +30,7 @@ export default function SongCard({ song }) {
   // Extract cover/recording ID and cover artist data if present
   const coverId = song?.recording_id || song?.cover_id || (typeof song?.id === 'string' && song.id.startsWith('cover-') ? song.id.replace(/^cover-/, '') : null);
   const isCover = Boolean(coverId || song?.is_cover || (typeof singer === 'string' && singer.includes('(Cover)')));
-  const coverArtistName = song?.cover_artist?.name || (singer ? singer.replace(/\s*\(Cover\)/i, '').trim() : 'समुदाय कलाकार');
+  const coverArtistName = song?.cover_artist?.name || (singer ? singer.replace(/\s*\(Cover\)/i, '').trim() : (isEnglish ? 'Community Artist' : 'समुदाय कलाकार'));
   const coverAvatar = song?.cover_artist?.avatar || song?.user_avatar || null;
   const originalSinger = song?.original_singer || null;
 
@@ -70,7 +76,7 @@ export default function SongCard({ song }) {
         favs.push({
           id: song.id,
           slug: song.slug,
-          title: title,
+          title: song.title?.canonical || rawDevanagari,
           singer: singer,
           poster: posterUrl,
           category: song.category,
@@ -105,7 +111,7 @@ export default function SongCard({ song }) {
         <Link
           href={songUrl}
           style={{ position: 'absolute', inset: 0, zIndex: 1, textDecoration: 'none' }}
-          aria-label={title}
+          aria-label={displayTitle}
         >
           {isCover ? (
             <div className="cover-poster-wrap">
@@ -113,7 +119,7 @@ export default function SongCard({ song }) {
               {posterUrl ? (
                 <img
                   src={posterUrl}
-                  alt={title}
+                  alt={displayTitle}
                   loading="lazy"
                   className="cover-poster-ambient-img"
                 />
@@ -138,7 +144,7 @@ export default function SongCard({ song }) {
                       {coverArtistName.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="cover-mic-icon-badge" title="Vocal Cover">
+                  <span className="cover-mic-icon-badge" title={t('कवर स्वर (Vocal Cover)', 'Vocal Cover', 'कवर स्वर')}>
                     <Mic size={10} color="#070913" strokeWidth={2.5} />
                   </span>
                 </div>
@@ -160,7 +166,7 @@ export default function SongCard({ song }) {
           ) : posterUrl ? (
             <img
               src={posterUrl}
-              alt={title}
+              alt={displayTitle}
               loading="lazy"
               style={{
                 width: '100%',
@@ -181,15 +187,17 @@ export default function SongCard({ song }) {
               background: 'radial-gradient(circle at center, rgba(255, 140, 0, 0.15) 0%, rgba(11, 14, 26, 0.9) 100%)'
             }}>
               <Disc size={36} color="var(--neon-saffron)" opacity={0.6} />
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>सुर-मिथिला संगीत</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('सुर-मिथिला संगीत', 'Sur-Mithila Music', 'सुर-मिथिला संगीत')}</span>
             </div>
           )}
         </Link>
 
         {/* Play Overlay Button */}
         <button
+          className="song-card-play-btn"
           onClick={handlePlayClick}
-          aria-label={`Play ${title}`}
+          aria-label={isEnglish ? `Play ${displayTitle}` : `बजाउ ${displayTitle}`}
+          title={isEnglish ? 'Play Song' : (isMaithiliPlus ? 'गीत बजाउ' : 'गीत बजाउ (Play)')}
           style={{
             position: 'absolute',
             bottom: '12px',
@@ -222,13 +230,14 @@ export default function SongCard({ song }) {
 
         {/* Add to Playlist Button */}
         <button
+          className="song-card-playlist-btn"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             setShowPlaylistModal(true);
           }}
-          aria-label="Add to playlist"
-          title="प्लेलिस्ट में जोड़ू"
+          aria-label={t('प्लेलिस्ट में जोड़ू (Add to Playlist)', 'Add to Playlist', 'संगीत-तालिका में जोड़ू')}
+          title={t('प्लेलिस्ट में जोड़ू (Add to Playlist)', 'Add to Playlist', 'संगीत-तालिका में जोड़ू')}
           style={{
             position: 'absolute',
             top: '10px',
@@ -255,8 +264,10 @@ export default function SongCard({ song }) {
 
         {/* Favorite Heart Button */}
         <button
+          className="song-card-fav-btn"
           onClick={toggleFavorite}
-          aria-label="Add to favorites"
+          aria-label={isFavorited ? t('पसंदीदा सं हटाउ (Remove Favorite)', 'Remove Favorite', 'मनपसंद सं हटाउ') : t('पसंदीदा में जोड़ू (Add to Favorites)', 'Add to Favorites', 'मनपसंद में जोड़ू')}
+          title={isFavorited ? t('पसंदीदा सं हटाउ (Remove Favorite)', 'Remove Favorite', 'मनपसंद सं हटाउ') : t('पसंदीदा में जोड़ू (Add to Favorites)', 'Add to Favorites', 'मनपसंद में जोड़ू')}
           style={{
             position: 'absolute',
             top: '10px',
@@ -281,28 +292,31 @@ export default function SongCard({ song }) {
 
         {/* Category Badge or Cover Pill on Poster */}
         {(song.category || isCover) && (
-          <span style={{
-            position: 'absolute',
-            top: '8px',
-            left: '8px',
-            background: isCover ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' : 'rgba(8, 10, 16, 0.8)',
-            backdropFilter: 'blur(8px)',
-            padding: '3px 8px',
-            borderRadius: '6px',
-            fontSize: '0.68rem',
-            color: isCover ? '#070913' : '#FDE047',
-            fontWeight: 700,
-            border: isCover ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 140, 0, 0.3)',
-            zIndex: 5,
-            boxShadow: isCover ? '0 2px 10px rgba(245, 158, 11, 0.4)' : 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}>
+          <span
+            className="song-card-badge"
+            style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              background: isCover ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' : 'rgba(8, 10, 16, 0.8)',
+              backdropFilter: 'blur(8px)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              fontSize: '0.68rem',
+              color: isCover ? '#070913' : '#FDE047',
+              fontWeight: 700,
+              border: isCover ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 140, 0, 0.3)',
+              zIndex: 5,
+              boxShadow: isCover ? '0 2px 10px rgba(245, 158, 11, 0.4)' : 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
             {isCover ? (
               <>
                 <Radio size={11} color="#070913" />
-                <span>कवर प्रस्तुति</span>
+                <span>{t('कवर प्रस्तुति (Cover)', 'Cover Performance', 'कवर प्रस्तुति')}</span>
               </>
             ) : (
               song.category
@@ -312,7 +326,7 @@ export default function SongCard({ song }) {
       </div>
 
       {/* Title & Metadata */}
-      <div style={{ marginTop: '8px' }}>
+      <div className="song-card-meta" style={{ marginTop: '8px' }}>
         <Link href={songUrl} style={{ textDecoration: 'none' }}>
           <h3 className="font-traditional song-card-title" style={{
             fontSize: '1.02rem',
@@ -327,9 +341,9 @@ export default function SongCard({ song }) {
             minHeight: '2.5em',
             transition: 'color 0.15s ease'
           }}>
-            {title}
+            {displayTitle}
           </h3>
-          {romanTitle && (
+          {secondaryTitle && (
             <p style={{
               fontSize: '0.76rem',
               color: 'var(--text-muted)',
@@ -339,14 +353,14 @@ export default function SongCard({ song }) {
               overflow: 'hidden',
               textOverflow: 'ellipsis'
             }}>
-              {romanTitle}
+              {secondaryTitle}
             </p>
           )}
         </Link>
 
         {/* Singer / Artist & Quick Studio CTA */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', minWidth: 0 }}>
-          <span style={{
+          <span className="song-card-artist-text" style={{
             fontSize: '0.8rem',
             color: isCover ? '#FDE047' : 'var(--text-secondary)',
             fontWeight: isCover ? 600 : 500,
@@ -361,7 +375,7 @@ export default function SongCard({ song }) {
           }}>
             {isCover && <Radio size={11} color="#10B981" style={{ flexShrink: 0 }} />}
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {isCover ? `${coverArtistName} (Cover)` : singer}
+              {isCover ? (isEnglish ? `${coverArtistName} (Cover)` : (isMaithiliPlus ? `${coverArtistName} (कवर)` : `${coverArtistName} (Cover)`)) : singer}
             </span>
             {isVerified && <CheckCircle size={12} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />}
           </span>
@@ -370,7 +384,7 @@ export default function SongCard({ song }) {
             {!coverId && (
               <Link
                 href={`/studio/${song.slug}`}
-                title="Sing Karaoke in Studio"
+                title={t('स्टूडियो में गाउ (Sing Karaoke)', 'Sing Karaoke in Studio', 'स्टूडियो में गाउ')}
                 style={{
                   color: 'var(--neon-saffron)',
                   padding: '3px',
@@ -386,12 +400,12 @@ export default function SongCard({ song }) {
             )}
 
             {hasYoutube && (
-              <span title="Official YouTube Video Available" style={{ display: 'flex', alignItems: 'center' }}>
+              <span title={t('आधिकारिक यूट्यूब वीडियो (Official Video)', 'Official YouTube Video', 'आधिकारिक यूट्यूब वीडियो')} style={{ display: 'flex', alignItems: 'center' }}>
                 <YoutubeIcon size={13} color="#FF2E63" />
               </span>
             )}
             {hasAudio && (
-              <span title="Audio Streaming Available" style={{ display: 'flex', alignItems: 'center' }}>
+              <span title={t('ऑडियो स्ट्रीमिंग उपलब्ध (Audio Streaming)', 'Audio Streaming Available', 'ऑडियो स्ट्रीमिंग उपलब्ध')} style={{ display: 'flex', alignItems: 'center' }}>
                 <Radio size={13} color="#10B981" />
               </span>
             )}
@@ -408,7 +422,7 @@ export default function SongCard({ song }) {
             overflow: 'hidden',
             textOverflow: 'ellipsis'
           }}>
-            मूल स्वर: {originalSinger}
+            {t('मूल स्वर: ' + originalSinger, 'Original: ' + originalSinger, 'मूल स्वर: ' + originalSinger)}
           </p>
         )}
 
@@ -416,11 +430,11 @@ export default function SongCard({ song }) {
         {song?.ai_reason && (
           <div
             className="song-card-ai-badge"
-            title={typeof song.ai_reason === 'string' ? song.ai_reason : (song.ai_reason.en || song.ai_reason.mai)}
+            title={typeof song.ai_reason === 'string' ? song.ai_reason : (isEnglish ? (song.ai_reason.en || song.ai_reason.mai) : (song.ai_reason.mai || song.ai_reason.en))}
           >
             <span style={{ color: 'var(--accent-gold, #EAB308)', display: 'inline-flex', flexShrink: 0, marginTop: '1px' }}>✨</span>
             <span className="song-card-ai-text">
-              {typeof song.ai_reason === 'string' ? song.ai_reason : (song.ai_reason.mai || song.ai_reason.en)}
+              {typeof song.ai_reason === 'string' ? song.ai_reason : (isEnglish ? (song.ai_reason.en || song.ai_reason.mai) : (song.ai_reason.mai || song.ai_reason.en))}
             </span>
           </div>
         )}

@@ -2,23 +2,16 @@
 
 import React from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useLanguage } from '../context/LanguageContext';
+import { CULTURAL_CATEGORIES } from '../lib/categories';
 
-export const CULTURAL_CATEGORIES = [
-  { name: 'सभ (All)', value: 'all' },
-  { name: 'भगवती गीत', value: 'भगवती' },
-  { name: 'विवाह संस्कार', value: 'विवाह' },
-  { name: 'छठि महापर्व', value: 'छठि' },
-  { name: 'नचारी / महेशवाणी', value: 'नचारी' },
-  { name: 'समदाउन (विदाई)', value: 'समदाउन' },
-  { name: 'सोहर (जन्मोत्सव)', value: 'सोहर' },
-  { name: 'विद्यापति पदावली', value: 'विद्यापति' },
-  { name: 'ऋतु / पर्व गीत', value: 'पर्व' }
-];
+export { CULTURAL_CATEGORIES };
 
 export default function CategoryChips({ activeCategory = 'all', onSelectCategory }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
 
   const handleSelect = (val) => {
     if (onSelectCategory) {
@@ -30,9 +23,29 @@ export default function CategoryChips({ activeCategory = 'all', onSelectCategory
       } else {
         params.set('category', val);
       }
+      params.delete('cursor');
       params.delete('page');
       router.push(`${pathname}?${params.toString()}`);
     }
+  };
+
+  const isCategorySelected = (cat) => {
+    if (cat.value === 'all') {
+      return !activeCategory || activeCategory === 'all';
+    }
+    if (!activeCategory || activeCategory === 'all') {
+      return false;
+    }
+    const cur = activeCategory.trim().toLowerCase();
+    const val = cat.value.toLowerCase();
+    const name = cat.name.toLowerCase();
+
+    return cur === val ||
+      cur === name ||
+      (cat.pure && cur === cat.pure.toLowerCase()) ||
+      cur.includes(val) ||
+      val.includes(cur) ||
+      Boolean(cat.aliases?.some(a => a.toLowerCase() === cur || cur.includes(a.toLowerCase())));
   };
 
   return (
@@ -46,7 +59,7 @@ export default function CategoryChips({ activeCategory = 'all', onSelectCategory
       msOverflowStyle: 'none'
     }}>
       {CULTURAL_CATEGORIES.map((cat) => {
-        const isSelected = activeCategory === cat.value || (cat.value === 'all' && (!activeCategory || activeCategory === 'all'));
+        const isSelected = isCategorySelected(cat);
         return (
           <button
             key={cat.value}
@@ -65,7 +78,7 @@ export default function CategoryChips({ activeCategory = 'all', onSelectCategory
               transition: 'all 0.2s ease'
             }}
           >
-            {cat.name}
+            {t(cat.name, cat.en, cat.pure)}
           </button>
         );
       })}

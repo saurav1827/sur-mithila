@@ -6,7 +6,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { usePlayer } from '../../../context/PlayerContext';
 import {
   Mic, Square, Play, Pause, UploadCloud, ArrowLeft, RefreshCw, Sliders,
-  CheckCircle2, Disc, Activity, Download, Headphones, AlertTriangle, AlertCircle, X,
+  CheckCircle2, Disc, Activity, Download, Headphones, AlertTriangle, AlertCircle, X, Lock,
 } from 'lucide-react';
 import YouTube from 'react-youtube';
 import LyricsTheatre from '../../../components/LyricsTheatre';
@@ -95,7 +95,7 @@ const ghostBtn = {
 
 export default function StudioClientView({ song }) {
   const { user, isLoaded, openSignIn } = useAuth();
-  const { t } = useLanguage();
+  const { t, formatSongTitle, isEnglish, isMaithiliPlus } = useLanguage();
   const { currentTrack, closePlayer } = usePlayer();
 
   const engineRef = useRef(null);
@@ -110,6 +110,7 @@ export default function StudioClientView({ song }) {
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
   const [caption, setCaption] = useState('');
+  const [isPrivateTake, setIsPrivateTake] = useState(Boolean(user?.is_private));
   const [isMicTesting, setIsMicTesting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [takeMixed, setTakeMixed] = useState(false);
@@ -175,8 +176,8 @@ export default function StudioClientView({ song }) {
   recordingStateRef.current = recordingState;
   syncMsRef.current = syncOffsetMs;
 
-  const title = song.title?.canonical || song.title?.devanagari || 'Maithili Geet';
-  const singer = song.credits?.singer || 'पारंपरिक';
+  const title = formatSongTitle ? formatSongTitle(song) : (song.title?.canonical || song.title?.devanagari || 'Maithili Geet');
+  const singer = song.credits?.singer || (isEnglish ? 'Traditional' : 'पारंपरिक');
   const devanagariText = song.lyrics?.devanagari || song.lyrics?.raw_text || 'बोल उपलब्ध नहि अछि...';
   const romanText = song.lyrics?.roman || transliterateLyrics(devanagariText);
   const lineTimes = song.lyrics?.line_times; // optional: seconds, one per non-empty line
@@ -469,6 +470,30 @@ export default function StudioClientView({ song }) {
       } else {
         playReferenceVideo();
       }
+
+      // Register sung song into watch history immediately
+      try {
+        const historyItem = {
+          id: song.id,
+          slug: song.slug,
+          title: song.title?.canonical || song.title?.devanagari || (typeof song.title === 'string' ? song.title : 'Maithili Geet'),
+          singer: song.credits?.singer || song.singer || 'पारंपरिक',
+          poster: song.poster?.image_url || song.poster || null,
+          category: song.category || 'लोकगीत',
+          youtube: song.youtube || {},
+          audio: song.audio || {},
+          played_at: new Date().toISOString()
+        };
+        const rawHist = localStorage.getItem('sur_mithila_history') || '[]';
+        const parsed = JSON.parse(rawHist);
+        const filtered = parsed.filter((i) => i.id !== historyItem.id);
+        localStorage.setItem('sur_mithila_history', JSON.stringify([historyItem, ...filtered].slice(0, 80)));
+        fetch('/api/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ song: historyItem })
+        }).catch(() => {});
+      } catch (err) {}
     } catch (err) {
       console.error('Recording start error:', err);
       abortTake(
@@ -676,9 +701,39 @@ export default function StudioClientView({ song }) {
           caption: caption.trim() || `${song.title?.canonical} - Folk Karaoke Cover`,
           duration: Math.round(reviewDuration || recordingTime),
           isMixed: takeMixed,
+          isPrivate: isPrivateTake,
         }),
       });
       if (!saveRes.ok) throw new Error('Saving to the community feed failed.');
+      const saveData = await saveRes.json().catch(() => ({}));
+      const pubRec = saveData?.recording;
+      const recId = pubRec?.recording_id || pubRec?.id || `rec_${Date.now()}`;
+
+      // Register newly published cover in user's watch history
+      try {
+        const coverHistoryItem = {
+          id: `cover-${recId}`,
+          slug: song.slug,
+          title: `${song.title?.canonical || song.title || 'Maithili Geet'} (Cover)`,
+          singer: `${user?.fullName || user?.name || 'Artist'} (Cover)`,
+          poster: song.poster?.image_url || song.poster || null,
+          category: song.category || 'लोकगीत',
+          youtube: {},
+          audio: { hosted_audio_url: finalAudioUrl },
+          played_at: new Date().toISOString()
+        };
+        const rawHist = localStorage.getItem('sur_mithila_history') || '[]';
+        const parsed = JSON.parse(rawHist);
+        const filtered = parsed.filter((i) => i.id !== coverHistoryItem.id);
+        localStorage.setItem('sur_mithila_history', JSON.stringify([coverHistoryItem, ...filtered].slice(0, 80)));
+        fetch('/api/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ song: coverHistoryItem })
+        }).catch(() => {});
+      } catch (err) {
+        console.warn('Failed to record published cover in history:', err);
+      }
 
       setRecordingState('success');
     } catch (e) {
@@ -780,16 +835,16 @@ export default function StudioClientView({ song }) {
               </div>
               <h1 className="font-traditional" style={{ fontSize: '2.2rem', color: '#F8FAFC', margin: 0 }}>{title}</h1>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '2px' }}>
-                गायक / Singer: {singer} • रचयिता / Poet: {song.credits?.writer?.name || 'पारंपरिक'}
+                {t('गायक / Singer:', 'Singer:', 'गायक:')} {singer} • {t('रचयिता / Poet:', 'Lyricist:', 'रचयिता:')} {song.credits?.writer?.name || (isEnglish ? 'Traditional' : 'पारंपरिक')}
               </p>
             </div>
 
             <div className="lyrics-tabs-pill">
               <button onClick={() => setScriptMode('devanagari')} className={`lyrics-tab-btn ${scriptMode === 'devanagari' ? 'active' : ''}`}>
-                देवनागरी (Maithili)
+                {t('देवनागरी (Maithili)', 'Devanagari', 'देवनागरी')}
               </button>
               <button onClick={() => setScriptMode('roman')} className={`lyrics-tab-btn ${scriptMode === 'roman' ? 'active' : ''}`}>
-                Roman English
+                {t('रोमन (Roman)', 'Roman', 'रोमन')}
               </button>
             </div>
           </div>
@@ -868,10 +923,10 @@ export default function StudioClientView({ song }) {
                 {countdown}
               </div>
               <p style={{ color: '#F8FAFC', fontSize: '1.25rem', fontWeight: 600, marginTop: '14px' }}>
-                स्वर साधू, गायन एवं संगीत शुरू भऽ रहल अछि... (Get ready!)
+                {t('स्वर साधू, गायन एवं संगीत शुरू भऽ रहल अछि... (Get ready!)', 'Get ready! Backing track and recording starting...', 'स्वर साधू, गायन एवं संगीत शुरू भऽ रहल अछि...')}
               </p>
               <button onClick={cancelCountdown} style={{ ...ghostBtn, marginTop: '20px', padding: '8px 20px', borderRadius: '9999px' }}>
-                Cancel
+                {t('रद्द करू (Cancel)', 'Cancel', 'रद्द करू')}
               </button>
             </div>
           )}
@@ -887,7 +942,7 @@ export default function StudioClientView({ song }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  📜 Live Teleprompter (लाइव बोल)
+                  {t('📜 Live Teleprompter (लाइव बोल)', '📜 Live Teleprompter', '📜 सजीव बोल')}
                 </span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                   Line {lineIdx + 1} of {lyricsLines.length}
@@ -982,11 +1037,13 @@ export default function StudioClientView({ song }) {
                   >
                     <Mic size={42} />
                   </button>
-                  <h3 style={{ fontSize: '1.25rem', color: '#F8FAFC', marginBottom: '6px' }}>गायन शुरू करू (Start Recording)</h3>
+                  <h3 style={{ fontSize: '1.25rem', color: '#F8FAFC', marginBottom: '6px' }}>
+                    {t('गायन शुरू करू (Start Recording)', 'Start Recording', 'गायन शुरू करू')}
+                  </h3>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', maxWidth: '280px', margin: '0 auto 16px' }}>
                     {canStart
-                      ? 'माइक ऑन करू, संगीत स्वतः आरंभ होयत आ अहाँक गायन रिकॉर्ड होयत।'
-                      : 'Confirm headphones (or turn on echo cancellation) above to unlock recording.'}
+                      ? t('माइक ऑन करू, संगीत स्वतः आरंभ होयत आ अहाँक गायन रिकॉर्ड होयत।', 'Turn on your mic; backing track will start and record your voice.', 'माइक ऑन करू, संगीत स्वतः आरंभ होयत आ अहाँक गायन रिकॉर्ड होयत।')
+                      : t('रिकॉर्डिंग शुरू करबा लेल पहिने हेडफ़ोन निश्चित करू।', 'Confirm headphones (or turn on echo cancellation) above to unlock recording.', 'प्रस्तुति शुरू करबा लेल पहिने हेडफ़ोन निश्चित करू।')}
                   </p>
 
                   <button
@@ -1000,7 +1057,7 @@ export default function StudioClientView({ song }) {
                     }}
                   >
                     <Activity size={14} color={isMicTesting ? '#10B981' : 'var(--neon-saffron)'} />
-                    <span>{isMicTesting ? 'Stop mic check' : '🎤 Mic check'}</span>
+                    <span>{isMicTesting ? t('माइक जाँच रोकू', 'Stop mic check', 'माइक जाँच रोकू') : t('🎤 माइक जाँच (Mic check)', '🎤 Mic check', '🎤 माइक जाँच')}</span>
                   </button>
 
                   {isMicTesting && (
@@ -1060,7 +1117,7 @@ export default function StudioClientView({ song }) {
                     <Square size={24} fill="#FF2E63" />
                   </button>
                   <p style={{ marginTop: '12px', fontSize: '0.8rem', color: '#FF2E63', fontWeight: 600 }}>
-                    {isFinishing ? 'Finishing the take…' : 'रिकाॅर्डिंग समाप्त करू (Finish & preview)'}
+                    {isFinishing ? t('समाप्त भऽ रहल...', 'Finishing take...', 'समाप्त भऽ रहल...') : t('रिकाॅर्डिंग समाप्त करू (Finish & preview)', 'Finish & Preview', 'रिकाॅर्डिंग समाप्त करू')}
                   </p>
                 </div>
               )}
@@ -1073,7 +1130,9 @@ export default function StudioClientView({ song }) {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Sliders size={18} color="var(--neon-saffron)" />
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F8FAFC' }}>Mixer & Vocal FX</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F8FAFC' }}>
+                  {t('मिक्सर एवं वोकल FX (Mixer & Vocal FX)', 'Mixer & Vocal FX', 'ध्वनि संमिश्रक एवं स्वर प्रभाव')}
+                </span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
@@ -1150,12 +1209,12 @@ export default function StudioClientView({ song }) {
             <div style={{ position: 'relative', maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                 <h2 className="font-traditional" style={{ fontSize: '1.6rem', color: '#F8FAFC', margin: 0 }}>
-                  🎧 अहाँक रिकॉर्डिंग (Review your take)
+                  {t('🎧 अहाँक रिकॉर्डिंग (Review your take)', '🎧 Review Your Take', '🎧 अहाँक प्रस्तुति')}
                 </h2>
                 <span style={takeMixed
                   ? badge('rgba(16, 185, 129, 0.2)', '#6EE7B7', 'rgba(16, 185, 129, 0.4)')
                   : badge('rgba(251, 191, 36, 0.15)', '#FDE047', 'rgba(251, 191, 36, 0.4)')}>
-                  {takeMixed ? 'Voice + backing, mixed' : 'Voice only'}
+                  {takeMixed ? t('वोकल + संगीत मिश्रित (Mixed)', 'Voice + Backing (Mixed)', 'स्वर + संगीत मिश्रित') : t('मात्र वोकल (Voice only)', 'Voice only', 'मात्र स्वर')}
                 </span>
               </div>
 
@@ -1220,7 +1279,7 @@ export default function StudioClientView({ song }) {
                   maxLength={140}
                   onChange={(e) => setCaption(e.target.value)}
                   disabled={recordingState === 'uploading'}
-                  placeholder="प्रस्तुतिक वर्णन / Add a cover caption or dedication…"
+                  placeholder={t('प्रस्तुतिक वर्णन / Add a cover caption or dedication…', 'Add a cover caption or dedication…', 'प्रस्तुतिक वर्णन / समर्पण लिखू…')}
                   style={{
                     width: '100%', padding: '12px 14px', borderRadius: '10px', outline: 'none',
                     background: 'rgba(0, 0, 0, 0.4)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#F8FAFC', fontSize: '0.9rem',
@@ -1229,16 +1288,47 @@ export default function StudioClientView({ song }) {
                 <div style={{ textAlign: 'right', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>{caption.length}/140</div>
               </div>
 
+              {user?.canManagePrivacy && (
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  background: 'rgba(234, 179, 8, 0.05)',
+                  border: '1px solid rgba(234, 179, 8, 0.2)',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={isPrivateTake}
+                    onChange={(e) => setIsPrivateTake(e.target.checked)}
+                    disabled={recordingState === 'uploading'}
+                    style={{ width: '18px', height: '18px', accentColor: '#EAB308', cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Lock size={14} color="#EAB308" />
+                      {t('व्यक्तिगत रूपेँ प्रकाशित करू (Private)', 'Publish as Private Recording', 'व्यक्तिगत रूपेँ प्रकाशित करू')}
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                      {t('मात्र अहाँ आ व्यवस्थापक एहि रिकॉर्डिंग केँ देखि वा सुनि सकब।', 'Only you and platform administrators will be able to see or listen to this recording.', 'मात्र अहाँ आ व्यवस्थापक एहि प्रस्तुति केँ देखि वा सुनि सकब।')}
+                    </div>
+                  </div>
+                </label>
+              )}
+
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                 <button onClick={resetTake} disabled={recordingState === 'uploading'} style={{ ...ghostBtn, flex: '1 1 140px' }}>
-                  <RefreshCw size={16} /> Re-record
+                  <RefreshCw size={16} /> {t('पुनः रिकॉर्ड करू (Re-record)', 'Re-record', 'पुनः रिकॉर्ड करू')}
                 </button>
                 <a
                   href={audioUrl}
                   download={`${song.slug}-cover.${extForMime(audioBlob?.type)}`}
                   style={{ ...ghostBtn, flex: '1 1 140px', textDecoration: 'none' }}
                 >
-                  <Download size={16} /> Download
+                  <Download size={16} /> {t('डाउनलोड (Download)', 'Download', 'डाउनलोड')}
                 </a>
                 <button
                   onClick={handleUpload}
@@ -1249,7 +1339,7 @@ export default function StudioClientView({ song }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   }}
                 >
-                  <UploadCloud size={18} /> Publish to Community
+                  <UploadCloud size={18} /> {t('समुदाय मे साझा करू (Publish to Community)', 'Publish to Community', 'समुदाय मे साझा करू')}
                 </button>
               </div>
 
@@ -1260,8 +1350,12 @@ export default function StudioClientView({ song }) {
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: '#10B981',
                 }}>
                   <UploadCloud size={54} style={{ animation: 'bounce 1.5s infinite', marginBottom: '16px' }} />
-                  <h3 style={{ fontSize: '1.3rem', color: '#F8FAFC', marginBottom: '6px' }}>समुदाय मे प्रकाशित भऽ रहल अछि...</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Uploading your cover. Keep this tab open.</p>
+                  <h3 style={{ fontSize: '1.3rem', color: '#F8FAFC', marginBottom: '6px' }}>
+                    {t('समुदाय मे प्रकाशित भऽ रहल अछि...', 'Publishing to community...', 'समुदाय मे प्रकाशित भऽ रहल अछि...')}
+                  </h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    {t('अहाँक प्रस्तुति अपलोड भऽ रहल अछि। कृपया ई टैब खुजल राखू।', 'Uploading your cover. Keep this tab open.', 'अहाँक प्रस्तुति अपलोड भऽ रहल अछि। कृपया ई पत्र खुजल राखू।')}
+                  </p>
                 </div>
               )}
             </div>
@@ -1277,16 +1371,18 @@ export default function StudioClientView({ song }) {
               }}>
                 <CheckCircle2 size={36} color="#10B981" />
               </div>
-              <h3 style={{ fontSize: '1.5rem', color: '#F8FAFC', marginBottom: '8px' }}>बधाई! (Cover published)</h3>
+              <h3 style={{ fontSize: '1.5rem', color: '#F8FAFC', marginBottom: '8px' }}>
+                {t('बधाई! (Cover published)', 'Congratulations! Cover published', 'बधाई! प्रस्तुति प्रकाशित भेल')}
+              </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
-                अहाँक गायन सुर-मिथिला समुदाय फीड पर प्रकाशित भऽ गेल।
+                {t('अहाँक गायन सुर-मिथिला समुदाय फीड पर प्रकाशित भऽ गेल।', 'Your cover has been published to the Sur-Mithila community feed.', 'अहाँक गायन सुर-मिथिला समुदाय मंच पर प्रकाशित भऽ गेल।')}
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
                 <Link href="/community" className="pill-btn-play" style={{ textDecoration: 'none' }}>
-                  <span>View in Community Feed (फीड मे देखू)</span>
+                  <span>{t('फीड मे देखू (View in Community Feed)', 'View in Community Feed', 'मंच पर देखू')}</span>
                 </Link>
                 <button onClick={resetTake} style={{ ...ghostBtn, padding: '10px 22px', borderRadius: '9999px' }}>
-                  Record another take
+                  {t('आन रिकॉर्डिंग करू (Record another take)', 'Record another take', 'आन प्रस्तुति करू')}
                 </button>
               </div>
             </div>

@@ -201,7 +201,7 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login', red
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={isLogin ? 'Sign in' : 'Create account'}
+        aria-label={isLogin ? t('लॉगिन (Sign In)', 'Sign in', 'प्रवेश') : t('खाता बनाउ (Create Account)', 'Create account', 'खाता बनाउ')}
         className="login-dialog-card"
         style={{
           background: 'radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.14) 0%, rgba(11, 14, 26, 0.98) 55%)',
@@ -220,7 +220,7 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login', red
         {/* Close Button */}
         <button
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('बंद करू (Close)', 'Close', 'बंद करू')}
           style={{
             position: 'absolute',
             top: '12px',
@@ -262,10 +262,10 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login', red
             </div>
 
             <h2 className="font-traditional" style={{ fontSize: '1.55rem', color: '#F8FAFC', marginBottom: '2px', lineHeight: 1.15 }}>
-              {isLogin ? t('लॉगिन करू', 'Welcome Back') : t('खाता बनाउ', 'Create Account')}
+              {isLogin ? t('लॉगिन करू (Welcome Back)', 'Welcome Back', 'प्रवेश करू') : t('खाता बनाउ (Create Account)', 'Create Account', 'खाता बनाउ')}
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: 1.3, margin: 0 }}>
-              {t('सुर-मिथिला मे अपन खाता सं जुड़ू', 'Sign in to Sur-Mithila to continue')}
+              {t('सुर-मिथिला मे अपन खाता सं जुड़ू', 'Sign in to Sur-Mithila to continue', 'सुर-मिथिला मे अपन खाता सं जुड़ू')}
             </p>
           </div>
 
@@ -315,7 +315,7 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login', red
                 color: isLogin ? '#070913' : 'var(--text-secondary)',
               }}
             >
-              {t('लॉगिन', 'Sign In')}
+              {t('लॉगिन (Sign In)', 'Sign In', 'प्रवेश')}
             </button>
             <button
               role="tab"
@@ -334,7 +334,7 @@ export default function LoginModal({ isOpen, onClose, initialMode = 'login', red
                 color: !isLogin ? '#070913' : 'var(--text-secondary)',
               }}
             >
-              {t('खाता बनाउ', 'Sign Up')}
+              {t('खाता बनाउ (Sign Up)', 'Sign Up', 'खाता बनाउ')}
             </button>
           </div>
 

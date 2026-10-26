@@ -36,7 +36,7 @@ export default async function DedicatedArtistPage({ params }) {
   const { artist, songs } = data;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="artist-page-wrapper">
       <ArtistHero artist={artist} songs={songs} />
       <ArtistTabs artist={artist} songs={songs} />
     </div>

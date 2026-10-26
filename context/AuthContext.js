@@ -84,6 +84,9 @@ export function AuthProvider({ children }) {
       role: profile?.role || clerkUser.publicMetadata?.role || 'user',
       bio: profile?.bio || '',
       location: profile?.location || '',
+      is_private: Boolean(profile?.is_private),
+      canManagePrivacy: Boolean(profile?.canManagePrivacy),
+      isAdmin: Boolean(profile?.isAdmin || profile?.role === 'admin'),
       joined_at: clerkUser.createdAt ? new Date(clerkUser.createdAt).toISOString() : null,
     };
   }, [isSignedIn, clerkUser, profile]);

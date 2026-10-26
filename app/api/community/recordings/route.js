@@ -3,8 +3,74 @@ import { auth } from '@clerk/nextjs/server';
 import { getDatabase } from '../../../../lib/mongodb';
 import { recordingFilter } from '../../../../lib/community-service';
 import { getAuthRole } from '../../../../lib/authz';
+import { canViewRecording, canModifyRecordingPrivacy } from '../../../../lib/privacy';
 
 export const dynamic = 'force-dynamic';
+
+export async function PATCH(req) {
+  try {
+    const { userId: viewerUserId, role: viewerRole, email: viewerEmail } = await getAuthRole();
+    if (!viewerUserId) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const { recordingId, is_private } = body;
+
+    if (!recordingId || typeof is_private !== 'boolean') {
+      return NextResponse.json(
+        { success: false, error: 'recordingId and boolean is_private are required' },
+        { status: 400 }
+      );
+    }
+
+    const db = await getDatabase();
+    if (!db) {
+      return NextResponse.json({ success: false, error: 'Database unavailable' }, { status: 503 });
+    }
+
+    const recCol = db.collection('community_recordings');
+    const recording = await recCol.findOne(recordingFilter(recordingId));
+    if (!recording) {
+      return NextResponse.json({ success: false, error: 'Recording not found' }, { status: 404 });
+    }
+
+    const canModify = canModifyRecordingPrivacy({
+      recording,
+      viewerUserId,
+      viewerRole,
+      viewerEmail,
+    });
+
+    if (!canModify) {
+      return NextResponse.json({
+        success: false,
+        error: 'Permission denied: You cannot change the privacy of this recording.',
+      }, { status: 403 });
+    }
+
+    await recCol.updateOne(
+      recordingFilter(recordingId),
+      {
+        $set: {
+          is_private,
+          privacy_updated_at: new Date().toISOString(),
+          privacy_updated_by: viewerUserId,
+        },
+      }
+    );
+
+    return NextResponse.json({
+      success: true,
+      recordingId,
+      is_private,
+      message: `Recording is now ${is_private ? 'private' : 'public'}.`,
+    });
+  } catch (error) {
+    console.error('[PATCH Recording Error]:', error);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+  }
+}
 
 export async function DELETE(req) {
   try {
@@ -108,6 +174,35 @@ export async function GET(req) {
       return NextResponse.json({ success: false, error: 'Recording not found' }, { status: 404 });
     }
 
+    // Fetch creator's user document to check account-level privacy
+    let creatorUser = null;
+    if (rec.user_id) {
+      creatorUser = await db.collection('users').findOne(
+        { id: rec.user_id },
+        { projection: { id: 1, name: 1, is_private: 1 } }
+      );
+    }
+
+    // Enforce privacy check: if recording or creator is private, only owner or admin can view
+    const isPrivate = Boolean(rec.is_private || creatorUser?.is_private);
+    if (isPrivate) {
+      const { userId: viewerUserId, role: viewerRole, email: viewerEmail } = await getAuthRole();
+      const allowed = canViewRecording({
+        recording: rec,
+        creatorUser,
+        viewerUserId,
+        viewerRole,
+        viewerEmail,
+      });
+
+      if (!allowed) {
+        return NextResponse.json(
+          { success: false, error: 'This recording is private.', isPrivate: true },
+          { status: 403 }
+        );
+      }
+    }
+
     const slug = rec.song_slug || rec.song_id;
     let songDoc = null;
     if (slug) {
@@ -134,6 +229,7 @@ export async function GET(req) {
       duration: Number(rec.duration) || 0,
       likes: rec.likes || 0,
       commentsCount: rec.comments_count ?? rec.comments?.length ?? 0,
+      is_private: Boolean(rec.is_private),
       createdAt: rec.created_at ? new Date(rec.created_at).toISOString() : null,
     };
 
@@ -143,3 +239,4 @@ export async function GET(req) {
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

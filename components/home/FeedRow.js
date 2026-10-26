@@ -23,7 +23,7 @@ export default function FeedRow({ row }) {
     return (
         <section className="feed-row" id={`row-${row.key}`} aria-label={row.title.en}>
             <div className="row-head">
-                <h2 className="font-traditional"><TranslatedText maithili={row.title.mai} english={row.title.en} /></h2>
+                <h2 className="font-traditional"><TranslatedText maithili={row.title.mai} english={row.title.en} pure={row.title.pure} /></h2>
                 {row.href && (
                     <Link href={row.href} style={{
                         display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem',

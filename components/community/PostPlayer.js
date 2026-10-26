@@ -4,6 +4,7 @@ import React, { useRef, useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link';
 import { Play, Pause, Heart } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
+import { recordCoverInHistory } from '../../lib/history-utils';
 
 let activeAudio = null;
 const BARS = 48;
@@ -97,7 +98,10 @@ export default function PostPlayer({ post, burstKey, onDoubleTap }) {
       if (setGlobalIsPlaying) setGlobalIsPlaying(false);
       activeAudio = el;
       el.play()
-        .then(() => setPlaying(true))
+        .then(() => {
+          setPlaying(true);
+          recordCoverInHistory(post);
+        })
         .catch((err) => {
           console.warn('[PostPlayer] Play error:', err);
           setPlaying(false);

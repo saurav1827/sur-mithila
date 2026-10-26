@@ -16,6 +16,7 @@ export default function MobileBottomNav() {
       icon: Compass,
       labelMai: 'संग्रह',
       labelEn: 'Explore',
+      labelPureMai: 'संग्रह',
       matchExact: true,
     },
     {
@@ -23,6 +24,7 @@ export default function MobileBottomNav() {
       icon: Disc,
       labelMai: 'विधा',
       labelEn: 'Categories',
+      labelPureMai: 'विधा',
       matchExact: false,
     },
     {
@@ -30,6 +32,7 @@ export default function MobileBottomNav() {
       icon: Mic,
       labelMai: 'गायक',
       labelEn: 'Artists',
+      labelPureMai: 'गायक',
       matchExact: false,
     },
     {
@@ -37,6 +40,7 @@ export default function MobileBottomNav() {
       icon: Sparkles,
       labelMai: 'प्लेलिस्ट',
       labelEn: 'Playlists',
+      labelPureMai: 'तालिका',
       matchExact: false,
     },
     {
@@ -44,6 +48,7 @@ export default function MobileBottomNav() {
       icon: Bookmark,
       labelMai: 'लाइब्रेरी',
       labelEn: 'Library',
+      labelPureMai: 'ग्रंथागार',
       matchExact: false,
     },
   ];
@@ -69,7 +74,7 @@ export default function MobileBottomNav() {
                 {isActive && <span className="mobile-bottom-nav-pill" />}
               </div>
               <span className="mobile-bottom-nav-label font-traditional">
-                {t(item.labelMai, item.labelEn)}
+                {t(item.labelMai, item.labelEn, item.labelPureMai)}
               </span>
             </Link>
           );
