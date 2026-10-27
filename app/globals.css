@@ -6433,6 +6433,96 @@ button {
 }
 
 /* ==========================================================
+   🌐 LANGUAGE & ACCOUNT DROPDOWNS (DESKTOP & MOBILE RESPONSIVE)
+========================================================== */
+.nav-lang-backdrop,
+.nav-account-backdrop {
+    display: none;
+}
+
+.nav-lang-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    width: 270px;
+    max-width: calc(100vw - 24px);
+    padding: 8px;
+    z-index: 65;
+    background: rgba(10, 12, 18, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(234, 179, 8, 0.28);
+    border-radius: 16px;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(234, 179, 8, 0.08);
+    animation: navPopupSlide 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-account-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    width: 248px;
+    max-width: calc(100vw - 24px);
+    padding: 8px;
+    z-index: 60;
+    background: rgba(10, 10, 14, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-card);
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    animation: navPopupSlide 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes navPopupSlide {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes navBackdropFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+    .nav-lang-backdrop,
+    .nav-account-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 9998;
+        animation: navBackdropFade 0.2s ease-out;
+    }
+
+    .nav-lang-dropdown {
+        position: fixed !important;
+        top: 66px !important;
+        right: 12px !important;
+        left: auto !important;
+        width: min(290px, calc(100vw - 24px)) !important;
+        max-width: calc(100vw - 24px) !important;
+        border-radius: 18px !important;
+        border: 1px solid rgba(234, 179, 8, 0.35) !important;
+        box-shadow: 0 25px 65px -10px rgba(0, 0, 0, 0.95), 0 0 35px rgba(234, 179, 8, 0.15) !important;
+        z-index: 10000 !important;
+    }
+
+    .nav-account-dropdown {
+        position: fixed !important;
+        top: 66px !important;
+        right: 12px !important;
+        left: auto !important;
+        width: min(260px, calc(100vw - 24px)) !important;
+        max-width: calc(100vw - 24px) !important;
+        border-radius: 16px !important;
+        z-index: 10000 !important;
+    }
+}
+
+/* ==========================================================
    🎯 DIRECT SCROLL TARGET HIGHLIGHT (COVER CARD & COMMENT)
 ========================================================== */
 .card-target-highlight {

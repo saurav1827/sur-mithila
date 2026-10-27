@@ -79,142 +79,176 @@ function LanguageSelector() {
       </button>
 
       {open && (
-        <div
-          role="menu"
-          aria-label={t('भाषा चयन', 'Select Language')}
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: 'calc(100% + 10px)',
-            width: '270px',
-            padding: '8px',
-            zIndex: 65,
-            background: 'rgba(10, 12, 18, 0.96)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(234, 179, 8, 0.28)',
-            borderRadius: '16px',
-            boxShadow: '0 20px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(234, 179, 8, 0.08)',
-          }}
-        >
+        <>
+          {/* Mobile backdrop scrim */}
           <div
-            style={{
-              padding: '6px 10px 8px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              marginBottom: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
+            className="nav-lang-backdrop"
+            onClick={() => setOpen(false)}
+            onTouchStart={() => setOpen(false)}
+            aria-hidden="true"
+          />
+
+          <div
+            role="menu"
+            className="nav-lang-dropdown"
+            aria-label={t('भाषा चयन', 'Select Language')}
           >
-            <span
+            <div
               style={{
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                color: '#EAB308',
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
+                padding: '6px 10px 8px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                marginBottom: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
               }}
             >
-              {t('भाषा चयन (Language)', 'Language', 'भाषा चयन')}
-            </span>
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-              {language === 'english' ? 'Global' : language === 'maithili_plus' ? 'शुद्ध' : 'द्विभाषी'}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            {LANGUAGES.map((item) => {
-              const isSelected = language === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={isSelected}
-                  onClick={() => {
-                    setLanguage(item.id);
-                    setOpen(false);
-                  }}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                <span
                   style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    gap: '8px',
-                    width: '100%',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    background: isSelected ? 'rgba(234, 179, 8, 0.12)' : 'transparent',
-                    border: isSelected ? '1px solid rgba(234, 179, 8, 0.35)' : '1px solid transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isSelected) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSelected) e.currentTarget.style.background = 'transparent';
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    color: '#EAB308',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                      <span
+                  {t('भाषा चयन (Language)', 'Language', 'भाषा चयन')}
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.64rem',
+                    padding: '1px 6px',
+                    borderRadius: '999px',
+                    background: 'rgba(234, 179, 8, 0.16)',
+                    color: '#EAB308',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {language === 'english' ? 'Global' : language === 'maithili_plus' ? 'शुद्ध' : 'द्विभाषी'}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label={t('बंद करू', 'Close', 'बंद करू')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '3px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px',
+                  lineHeight: 1,
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#FAFAFA'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {LANGUAGES.map((item) => {
+                const isSelected = language === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={isSelected}
+                    onClick={() => {
+                      setLanguage(item.id);
+                      setOpen(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: '8px',
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '10px',
+                      background: isSelected ? 'rgba(234, 179, 8, 0.12)' : 'transparent',
+                      border: isSelected ? '1px solid rgba(234, 179, 8, 0.35)' : '1px solid transparent',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                        <span
+                          style={{
+                            fontSize: '0.85rem',
+                            fontWeight: isSelected ? 700 : 500,
+                            color: isSelected ? '#FDE047' : '#FAFAFA',
+                          }}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.62rem',
+                            padding: '1px 5px',
+                            borderRadius: '999px',
+                            fontWeight: 700,
+                            background: isSelected ? 'rgba(234, 179, 8, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                            color: isSelected ? '#FDE047' : 'var(--text-muted)',
+                          }}
+                        >
+                          {item.badge}
+                        </span>
+                      </div>
+                      <p
                         style={{
-                          fontSize: '0.85rem',
-                          fontWeight: isSelected ? 700 : 500,
-                          color: isSelected ? '#FDE047' : '#FAFAFA',
+                          fontSize: '0.7rem',
+                          color: 'var(--text-muted)',
+                          margin: 0,
+                          lineHeight: 1.25,
                         }}
                       >
-                        {item.label}
-                      </span>
-                      <span
+                        {item.description}
+                      </p>
+                    </div>
+                    {isSelected && (
+                      <div
                         style={{
-                          fontSize: '0.62rem',
-                          padding: '1px 5px',
-                          borderRadius: '999px',
-                          fontWeight: 700,
-                          background: isSelected ? 'rgba(234, 179, 8, 0.25)' : 'rgba(255, 255, 255, 0.08)',
-                          color: isSelected ? '#FDE047' : 'var(--text-muted)',
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          background: '#EAB308',
+                          color: '#070913',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          marginTop: '2px',
                         }}
                       >
-                        {item.badge}
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        fontSize: '0.7rem',
-                        color: 'var(--text-muted)',
-                        margin: 0,
-                        lineHeight: 1.25,
-                      }}
-                    >
-                      {item.description}
-                    </p>
-                  </div>
-                  {isSelected && (
-                    <div
-                      style={{
-                        width: '18px',
-                        height: '18px',
-                        borderRadius: '50%',
-                        background: '#EAB308',
-                        color: '#070913',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        marginTop: '2px',
-                      }}
-                    >
-                      <Check size={11} strokeWidth={3} />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                        <Check size={11} strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
@@ -232,9 +266,11 @@ function AccountMenu() {
     const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
       document.removeEventListener('keydown', onKey);
     };
   }, [open]);
@@ -327,57 +363,61 @@ function AccountMenu() {
         </button>
 
         {open && (
-          <div
-            role="menu"
-            style={{
-              position: 'absolute', right: 0, top: 'calc(100% + 10px)', width: '248px', padding: '8px', zIndex: 60,
-              background: 'rgba(10,10,14,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid var(--border-card)', borderRadius: '14px', boxShadow: '0 16px 40px rgba(0,0,0,0.7)',
-            }}
-          >
-            <div style={{ padding: '10px 12px 12px', borderBottom: '1px solid var(--border-card)', marginBottom: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                <div style={{ fontWeight: 600, color: '#FAFAFA', fontSize: '0.92rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
-                {isAdmin && (
-                  <span style={{
-                    fontSize: '0.66rem',
-                    fontWeight: 700,
-                    color: '#070913',
-                    background: '#EAB308',
-                    padding: '1px 6px',
-                    borderRadius: '4px',
-                    letterSpacing: '0.05em'
-                  }}>
-                    ADMIN
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
-            </div>
-
-            <Link href="/profile" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
-              <User size={16} color="var(--text-secondary)" /> {t('प्रोफाइल', 'Profile', 'प्रोफाइल')}
-            </Link>
-            <Link href="/profile?tab=history" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
-              <Clock size={16} color="var(--text-secondary)" /> {t('श्रवण इतिहास', 'Watch History', 'श्रवण इतिहास')}
-            </Link>
-            <Link href="/profile?tab=settings" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
-              <Settings size={16} color="var(--text-secondary)" /> {t('सेटिंग्स', 'Settings', 'विन्यास')}
-            </Link>
-            {isAdmin && (
-              <Link href="/admin" role="menuitem" className="nav-menu-item" style={{ ...menuItem, color: '#EAB308' }} onClick={() => setOpen(false)}>
-                <Shield size={16} color="#EAB308" /> {t('प्रशासन', 'Admin', 'प्रशासन')}
-              </Link>
-            )}
-            <button
-              role="menuitem"
-              className="nav-menu-item"
-              style={{ ...menuItem, color: '#EF4444', marginTop: '4px' }}
-              onClick={() => { setOpen(false); logout(); }}
+          <>
+            <div
+              className="nav-account-backdrop"
+              onClick={() => setOpen(false)}
+              onTouchStart={() => setOpen(false)}
+              aria-hidden="true"
+            />
+            <div
+              role="menu"
+              className="nav-account-dropdown"
             >
-              <LogOut size={16} color="#EF4444" /> {t('लॉगआउट', 'Log Out', 'प्रस्थान')}
-            </button>
-          </div>
+              <div style={{ padding: '10px 12px 12px', borderBottom: '1px solid var(--border-card)', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <div style={{ fontWeight: 600, color: '#FAFAFA', fontSize: '0.92rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
+                  {isAdmin && (
+                    <span style={{
+                      fontSize: '0.66rem',
+                      fontWeight: 700,
+                      color: '#070913',
+                      background: '#EAB308',
+                      padding: '1px 6px',
+                      borderRadius: '4px',
+                      letterSpacing: '0.05em'
+                    }}>
+                      ADMIN
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
+              </div>
+
+              <Link href="/profile" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
+                <User size={16} color="var(--text-secondary)" /> {t('प्रोफाइल', 'Profile', 'प्रोफाइल')}
+              </Link>
+              <Link href="/profile?tab=history" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
+                <Clock size={16} color="var(--text-secondary)" /> {t('श्रवण इतिहास', 'Watch History', 'श्रवण इतिहास')}
+              </Link>
+              <Link href="/profile?tab=settings" role="menuitem" className="nav-menu-item" style={menuItem} onClick={() => setOpen(false)}>
+                <Settings size={16} color="var(--text-secondary)" /> {t('सेटिंग्स', 'Settings', 'विन्यास')}
+              </Link>
+              {isAdmin && (
+                <Link href="/admin" role="menuitem" className="nav-menu-item" style={{ ...menuItem, color: '#EAB308' }} onClick={() => setOpen(false)}>
+                  <Shield size={16} color="#EAB308" /> {t('प्रशासन', 'Admin', 'प्रशासन')}
+                </Link>
+              )}
+              <button
+                role="menuitem"
+                className="nav-menu-item"
+                style={{ ...menuItem, color: '#EF4444', marginTop: '4px' }}
+                onClick={() => { setOpen(false); logout(); }}
+              >
+                <LogOut size={16} color="#EF4444" /> {t('लॉगआउट', 'Log Out', 'प्रस्थान')}
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -423,6 +463,86 @@ export default function Navbar() {
           .glass-nav-header {
             padding: 0 16px !important;
             height: 64px !important;
+          }
+        }
+        /* Language & Account Dropdown Desktop & Mobile Layout */
+        .nav-lang-backdrop,
+        .nav-account-backdrop {
+          display: none;
+        }
+        .nav-lang-dropdown {
+          position: absolute;
+          right: 0;
+          top: calc(100% + 10px);
+          width: 270px;
+          max-width: calc(100vw - 24px);
+          padding: 8px;
+          z-index: 65;
+          background: rgba(10, 12, 18, 0.96);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(234, 179, 8, 0.28);
+          border-radius: 16px;
+          box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 24px rgba(234, 179, 8, 0.08);
+          animation: navPopupSlide 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-account-dropdown {
+          position: absolute;
+          right: 0;
+          top: calc(100% + 10px);
+          width: 248px;
+          max-width: calc(100vw - 24px);
+          padding: 8px;
+          z-index: 60;
+          background: rgba(10, 10, 14, 0.92);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid var(--border-card);
+          border-radius: 14px;
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+          animation: navPopupSlide 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes navPopupSlide {
+          from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes navBackdropFade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @media (max-width: 640px) {
+          .nav-lang-backdrop,
+          .nav-account-backdrop {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 9998;
+            animation: navBackdropFade 0.2s ease-out;
+          }
+          .nav-lang-dropdown {
+            position: fixed !important;
+            top: 66px !important;
+            right: 12px !important;
+            left: auto !important;
+            width: min(290px, calc(100vw - 24px)) !important;
+            max-width: calc(100vw - 24px) !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(234, 179, 8, 0.35) !important;
+            box-shadow: 0 25px 65px -10px rgba(0, 0, 0, 0.95), 0 0 35px rgba(234, 179, 8, 0.15) !important;
+            z-index: 10000 !important;
+          }
+          .nav-account-dropdown {
+            position: fixed !important;
+            top: 66px !important;
+            right: 12px !important;
+            left: auto !important;
+            width: min(260px, calc(100vw - 24px)) !important;
+            max-width: calc(100vw - 24px) !important;
+            border-radius: 16px !important;
+            z-index: 10000 !important;
           }
         }
         .mobile-nav-backdrop {
